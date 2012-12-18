@@ -12,7 +12,8 @@ core = [
   'core/parser.cpp'
 ]
 connection = [
-  'core/connection.cpp',
+  'core/clientsConnection.cpp',
+  'core/serversConnection.cpp',
   'core/message.cpp'
 ]
 events = [
