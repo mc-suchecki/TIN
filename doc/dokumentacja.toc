@@ -1,0 +1,13 @@
+\contentsline {section}{\numberline {1}Wst\IeC {\k e}p}{2}
+\contentsline {section}{\numberline {2}Klient}{2}
+\contentsline {section}{\numberline {3}Serwer}{2}
+\contentsline {subsection}{\numberline {3.1}Tryb interaktywny}{2}
+\contentsline {subsection}{\numberline {3.2}Tryb wsadowy}{3}
+\contentsline {section}{\numberline {4}Sk\IeC {\l }adnia polece\IeC {\'n} serwera}{3}
+\contentsline {subsection}{\numberline {4.1}Sk\IeC {\l }adnia podstawowa}{3}
+\contentsline {subsection}{\numberline {4.2}R\IeC {\k e}czne przyporz\IeC {\k a}dkowywanie nazw}{3}
+\contentsline {subsection}{\numberline {4.3}Automatyczne wybieranie komputer\IeC {\'o}w}{4}
+\contentsline {subsection}{\numberline {4.4}Wykonywanie operacji na wszystkich komputerach}{4}
+\contentsline {subsection}{\numberline {4.5}Uruchamianie zewn\IeC {\k e}trznych skrypt\IeC {\'o}w}{4}
+\contentsline {subsection}{\numberline {4.6}\IeC {\L }\IeC {\k a}czenie skrypt\IeC {\'o}w}{4}
+\contentsline {section}{\numberline {5}Zbieranie danych}{5}

@@ -1,0 +1,110 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{float}
+\usepackage{polski}
+\usepackage{a4wide}
+\usepackage{indentfirst}
+\usepackage[utf8x]{inputenc}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\headheight 1cm
+\lhead{Techniki Internetowe}
+\chead{}
+\rhead{Dokumentacja Wstępna}
+\lfoot{Przemysław Barcikowski, Jakub Król}
+\rfoot{Maciej Suchecki, Jacek Witkowski}
+
+\usepackage{listings}
+\usepackage{color}
+\definecolor{dkgreen}{rgb}{0,0.39063,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.50}
+\lstset{ %
+  basicstyle=\footnotesize,           % the size of the fonts that are used for the code
+  numbers=left,                   % where to put the line-numbers
+  numberstyle=\tiny\color{gray},  % the style that is used for the line-numbers
+  % will be numbered
+  numbersep=5pt,                  % how far the line-numbers are from the code
+  backgroundcolor=\color{white},      % choose the background color. You must add \usepackage{color}
+  showspaces=false,               % show spaces adding particular underscores
+  frame=single,                   % adds a frame around the code
+  rulecolor=\color{black},        % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  tabsize=2,                      % sets default tabsize to 2 spaces
+  captionpos=b,                   % sets the caption-position to bottom
+  breaklines=true,                % sets automatic line breaking
+  % also try caption instead of title
+  keywordstyle=\color{blue},          % keyword style
+  commentstyle=\color{dkgreen},       % comment style
+  stringstyle=\color{mauve},         % string literal style
+}
+
+\begin{document}
+\section{Wstęp}
+Celem projektu jest zaprojektowanie i implementacja systemu umożliwiającego rozproszone przetwarzanie na komputerach w sieci. Za pomocą zaimplementowanego przez nas rozwiązania zaistnieje możliwość wykonywania skryptów na zdalnym komputerze oraz zbieranie danych wytworzonych poprzez wywołane polecenia. Dodatkowe informacje będą zapewniały logi zapisywane i przechowywane w bazie danych serwera. System zostanie napisany w języku C++ z wykorzystaniem technik obiektowych, a komunikacja sieciowa zostanie zaimplementowana z wykorzystaniem systemu gniazd.
+
+\section{Nadzorca}
+Jest wielowątkowym programem, który na przemian wysyła wiadomości do serwera, oraz nasłuchuje odpowiedzi od niego (każde z połączeń z serwerem w oddzielnym wątku). Umożliwia również wydanie polecenia zakończenia wykonywania wszystkich zadań. Do komunikacji z każdym z serwerów tworzona jest inna instancja nadzorcy. Instancja nadzorcy ginie, gdy serwer zakończy wykonywanie wszystkich zleconych zadań.
+
+\section{Serwer}
+Serwer jest dwuwątkowym programem. Jeden wątek służy do wykonywania kolejnych zadań. Drugi ma za zadanie komunikować się z nadzorcą; wysyłać mu raporty o wykonanych zadaniach, oraz przyjmować kolejne polecenia. Jeżeli wątek wykonujący jest już zajęty, nowo otrzymane polecenia są umieszczane w kolejce i realizowane po kolei. Po wykonaniu danego zadania i utworzeniu binarnego pliku wynikowego, serwer wysyła nadzorcy ten plik.
+
+\section{Komunikacja}
+Używamy protokołu TCP. Serwery cały czas nasłuchują, nowo stworzona instancja nadzorcy odzywa się do serwera, któremu chce coś zlecić. Polecenia skierowane do serwerów są wysyłane binarnie, podczas gdy wyniki są przesyłane w plikach binarnych. Po zleceniu zadań, nadzorca zamyka połączenie, przestawia się w tryb nasłuchu i czeka na binarny plik wynikowy od serwera.
+
+\subsection{Wiadomości}
+Podstawą komunikacji jest wiadomość binarna będąca strukturą składającą się z:\\
+\begin{lstlisting}[caption = struktura wiadomości]
+struct Message { 
+  int type; 
+  void *content; 
+}; 
+\end{lstlisting}
+
+\newpage
+\subsection{Możliwe typy wiadomości wysyłanej przez nadzorcę}
+\begin{itemize}
+  \item init - rozpoczęcie komunikacji przez nadzorcę, w treści podany jest numer portu na którym będzie nasłuchiwał nadzorca
+  \item execute - w treści znajdują się polecenia dla serwera
+  \item kill:all - wymusza na serwerze natychmiastowe zaprzestanie wykonywania wszystkich 
+  \item kill - wymusza na serwerze natychmiastowe zaprzestanie wykonywania zadania podanego w treści wiadomości
+  \item end - informuje serwer o zakończeniu pracy nadzorcy
+\end{itemize}
+
+\subsection{Możliwe typy wiadomości wysyłanej przez nadzorcę}
+\begin{itemize}
+  \item init:received - potwierdzenie portu, na którym będzie nasłuchiwał nadzorca
+  \item execute:received - potwierdzenie otrzymania zadań
+  \item execute:started - informacja o rozpoczęciu wykonywania zadań
+  \item execute:stopped - informacja o zakończeniu wykonywania wszystkich zadań (treścią jest wynik wykonania operacji)
+  \item killed - informacja o zaprzestaniu wykonywania zadań, w treści wiadomości info o zabitym zadaniu, lub dopisek 'all'
+\end{itemize}
+
+\subsection{Kolejność wiadomości}
+\begin{enumerate}
+  \item N init
+  \item S init:received
+  \item N execute
+  \item S execute:received
+  \item S execute:started
+  \item N execute
+  \item S execute:received
+  \item N execute
+  \item S execute:received
+  \item S execute:started
+  \item S execute:started
+  \item S execute:stopped
+  \item N kill (opcjonalnie)
+  \item S killed (jako odpowiedź na kill)
+  \item N end
+\end{enumerate}
+
+\section{Logi}
+Cała historia wymiany wiadomości pomiędzy nadzorcą i serwerem będzie zapisywana w~logach. Logi z kolei, będą przechowywane w bazie danych. Pozwoli to na wydajniejsze przeglądanie logów w porównaniu do tradycyjnej metody zapisywania logów w plikach.\\
+
+Zapisywane są następujące informacje:
+\begin{itemize}
+  \item typ wiadomości
+  \item treść wiadomości (w przypadku, gdy treścią komunikatu jest plik z poleceniami lub plik z danymi, zapisywana będzie jedynie ścieżka do pliku lub treść wiadomości nie będzie przechowywana w ogóle)
+  \item data wysłania/otrzymania wiadomości,
+  \item informacja o serwerze
+\end{itemize}
+\end{document}
