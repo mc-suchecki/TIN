@@ -1,9 +1,10 @@
 #pragma once
 
+#include "events/event.hpp"
 #include <boost/thread.hpp>
 #include <queue>
 
-class Event;
+//class Event;
 
 class EventQueue {
   public:
