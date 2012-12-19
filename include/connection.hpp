@@ -10,8 +10,8 @@
 #include "eventQueue.hpp"
 
 // Maybe I will make separate class for IPAddress and PortsNr in the future
-typedef IPAddress std::string;
-typedef PortsNr unsigned short;
+typedef std::string IPAddress;
+typedef unsigned short PortsNr;
 
 /**
  * Class representing the connection with a remote server. Used for sending
@@ -20,18 +20,20 @@ typedef PortsNr unsigned short;
  */
 class Connection {
   public:
-    Connection(EventQueue * const eventQueue, IPAddress addr, PortsNr p):
-      IP_ADDRESS(addr), PORTS_NUBMER(p) {}
+    Connection(EventQueue * const evQ, IPAddress addr, PortsNr p):
+      eventQueue(evQ), IP_ADDRESS(addr), PORTS_NUMBER(p) {}
     virtual ~Connection() {}
 
     void init();
-    void execute(std::string &command);
+    void execute(const std::string &command);
     void killAll();
     std::string getResults(); //FIXME what should be the return type?
 
   private:
+    EventQueue * const eventQueue;
     const IPAddress IP_ADDRESS;
-    const PortsNr PORTS_NUBMER;  
+    const PortsNr PORTS_NUMBER;  
     char buffer[256]; //FIXME
-
+    int sockfd;
 };
+
