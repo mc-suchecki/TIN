@@ -21,7 +21,7 @@ class ConnectionEstablishedEvent: public ConnectionEvent {
 
 class ConnectionFailedEvent: public ConnectionEvent {
   public:
-    ConnectionFailedEvent(const std::string &errorMsg): ConnectionEvent(errorMsg) {};
+    ConnectionFailedEvent(const std::string &errorMsg = "") : ConnectionEvent(errorMsg) {};
     virtual ~ConnectionFailedEvent() {};
 };
 
@@ -33,7 +33,7 @@ class CommandSentEvent: public ConnectionEvent {
 
 class CommandSendingFailedEvent: public ConnectionEvent {
   public:
-    CommandSendingFailedEvent(const std::string &errorMsg):
+    CommandSendingFailedEvent(const std::string &errorMsg = "") :
       ConnectionEvent(errorMsg) {}
     virtual ~CommandSendingFailedEvent() {};
 };
@@ -48,7 +48,7 @@ class ActionDoneEvent : public ConnectionEvent {
 
 class ReceivingResultsFailureEvent: public ConnectionEvent {
   public:
-    ReceivingResultsFailureEvent(const std::string &errorMsg):
+    ReceivingResultsFailureEvent(const std::string &errorMsg = "") :
       ConnectionEvent(errorMsg) {}
     virtual ~ReceivingResultsFailureEvent() {}
 };

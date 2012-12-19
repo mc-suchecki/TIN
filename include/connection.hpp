@@ -27,7 +27,7 @@ class Connection {
     void init();
     void execute(const std::string &command);
     void killAll();
-    std::string getResults(); //FIXME what should be the return type?
+    std::string getIPAddress();
 
   private:
     EventQueue * const eventQueue;

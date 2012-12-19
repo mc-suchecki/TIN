@@ -72,3 +72,7 @@ void Connection::execute(const string &command) {
   cout << buffer << endl;
   //TODO put read data into eventQueue
 }
+
+std::string Connection::getIPAddress() {
+  return IP_ADDRESS;
+}
