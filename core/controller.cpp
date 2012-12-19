@@ -30,9 +30,11 @@ void Controller::run() {
 
       //log the reception of an event
       logger->logEvent(recievedEvent);
-
-      requestedAction = eventActionMap[&typeid(*recievedEvent)];
-      (this->*requestedAction)(recievedEvent);
+      
+      if(eventActionMap.find(&typeid(*recievedEvent)) != eventActionMap.end()){ 
+        requestedAction = eventActionMap[&typeid(*recievedEvent)];
+        (this->*requestedAction)(recievedEvent);
+      }
       delete recievedEvent;
     }
   }
