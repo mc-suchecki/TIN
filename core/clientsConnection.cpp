@@ -1,23 +1,9 @@
 /// @author Jacek Witkowski
 ///
-/// @brief Definiuje klasę Connection używaną przez Nadzorcę. Każda instancja tej klasy
-/// reprezentuje osobny Serwer wykonujący polecenia Nadzorcy.
+/// @brief Implementation of the ClientsConnection class
 
+#include <stdio.h>
 #include <sys/socket.h>
-
-class Connection {
-private:
-  const IPAddress IP_ADDRESS;
-  const PortsNr PORTS_NUBMER;  
-
-public:
-  Connection(IPAddress addr, PortsNr p):
-    IP_ADDRESS(addr), PORTS_NUBMER(p) {}
-
-  void init();
-  void execute(std::string &command);
-  void killAll;
-};
 
 void Connection::init() {
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -25,10 +11,10 @@ void Connection::init() {
     //TODO throw Exception;
   }
 
-  // Do poprawienia
   struct sockaddr_in servAddr;
+  memset(&servAddr, 0, sizeof(servAddr)); //TODO replace with generic fill()
   serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(portsNr);  
+  serv_addr.sin_port = htons(portsNr);
 
   if(inet_pton(AF_INET, IP_ADDRESS, &servAddr.sin_addr)<=0) {
     //TODO throw Exception;
@@ -45,5 +31,11 @@ void Connection::killAll() {
 }
 
 void Connection::execute(string &command) {
-  //TODO
+  //TODO n = write(sockfd,buffer,strlen(buffer));
+  /*    if (n < 0) 
+  error("ERROR writing to socket");
+  bzero(buffer,256);
+  n = read(sockfd,buffer,255);
+  if (n < 0) 
+    error("ERROR reading from socket"); */
 }
