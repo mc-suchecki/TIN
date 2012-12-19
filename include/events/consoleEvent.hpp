@@ -12,3 +12,21 @@ class ConsoleEvent : public Event {
   private:
     std::string message;
 };
+
+class CreateConnectionEvent : public ConsoleEvent {
+  public:
+    CreateConnectionEvent() {};
+    virtual ~CreateConnectionEvent() {};
+};
+
+class SendCommandEvent : public ConsoleEvent {
+  public:
+    SendCommandEvent() {};
+    virtual ~SendCommandEvent() {};
+};
+
+class CancelAllEvent : public ConsoleEvent {
+  public:
+    CancelAllEvent() {};
+    virtual ~CancelAllEvent() {};
+};
