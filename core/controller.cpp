@@ -14,7 +14,8 @@ Controller::Controller() {
 /** Method responsible for run constantly and process events. */
 void Controller::run() {
   while(true) {
-    //DO STH
-    cout << "lol" << endl;
+    //<delete>
+    console->run();
+    //</delete>
   }
 }

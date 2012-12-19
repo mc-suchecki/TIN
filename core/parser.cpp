@@ -1,4 +1,5 @@
 #include "../include/parser.hpp"
+#include "../include/events/consoleEvent.hpp"
 
 using namespace std;
 
@@ -6,7 +7,6 @@ Parser::Parser(){
 
 }
 
-void Parser::parse(string input){
-
-	cout<<"Parsowanie:" <<input<<endl;
+ConsoleEvent Parser::parse(string input){
+  return ConsoleEvent("tekst "+input);
 }

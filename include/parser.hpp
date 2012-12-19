@@ -1,11 +1,12 @@
 #pragma once
 
 #include <iostream>
+class ConsoleEvent;
 
 class Parser{
 public:
 	Parser();
 	~Parser();
-	void parse(std::string);
+	ConsoleEvent parse(std::string);
 
 };

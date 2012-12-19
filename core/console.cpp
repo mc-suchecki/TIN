@@ -1,10 +1,11 @@
 #include <iostream>
 #include "../include/console.hpp"
 #include "../include/parser.hpp"
+#include "../include/events/consoleEvent.hpp"
 
 using namespace std;
 
-Console::Console(EventQueue * queue){
+Console::Console(EventQueue * queue):queue(queue){
   parser = new Parser();
 }
 
@@ -12,9 +13,11 @@ void Console::run(){
   while(true){
     string line;
 
-    cout<<"? "<<endl;
+    cout<<"? ";
     cin>>line;
-    parser->parse(line);
+    ConsoleEvent event = parser->parse(line);
+    cout<< event.getMessage()<<endl;
+    queue->push(event);
   }
 }
 

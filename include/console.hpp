@@ -1,7 +1,8 @@
 #pragma once
 
+#include "eventQueue.hpp"
+
 class Parser;
-class EventQueue;
 
 /**
   Responsible for receiving user input and processing it
@@ -16,4 +17,5 @@ class Console{
 		void run();
 	private:	
 		Parser * parser;
+    EventQueue * queue;
 };
