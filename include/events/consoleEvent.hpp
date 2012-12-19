@@ -5,7 +5,7 @@
 
 class ConsoleEvent : public Event {
   public:
-    ConsoleEvent(std::string message) : message(message) {
+    ConsoleEvent(std::string message = "") : message(message) {
     }
     virtual ~ConsoleEvent() {};
     std::string getMessage() {return message;}

@@ -10,6 +10,8 @@
  * communication within whole application.
  */
 class Controller {
+  typedef void (Controller::*MethodPointer)(Event *);
+
   public:
     Controller();
     ~Controller();
@@ -20,5 +22,15 @@ class Controller {
     EventQueue *eventQueue;
     Console *console;
 
-    //std::map<std::type_info, Action> eventActionMap;
+    //map converting Event types to actions handling them
+    std::map<const std::type_info *, MethodPointer> eventActionMap;
+    void fillEventActionMap();
+
+    //methods handling particular events
+    void createConnection(Event *event);
+    void sendCommand(Event *event);
+    void cancelAll(Event *event);
+
+    //temporary method for testing puposes - TODO delete me!
+    void handleConsoleEvent(Event *event);
 };

@@ -5,26 +5,17 @@
 
 using namespace std;
 
-Console::Console(EventQueue * queue):queue(queue){
+Console::Console(EventQueue * queue) : queue(queue) {
   parser = new Parser();
 }
 
-void Console::run(){
-  while(true){
+void Console::run() {
+  while(true) {
     string line;
-
-    cout<<"? ";
-    getline(cin,line);
+    cout << "? ";
+    getline(cin, line);
     ConsoleEvent *event = parser->parse(line);
-    cout<< event->getMessage()<<endl;
     queue->push(event);
+    sleep(1);
   }
 }
-
-#ifdef konsola
-int main(){
-  Console * cons = new Console();
-  cons->run();
-  return 0;
-}
-#endif
