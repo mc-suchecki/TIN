@@ -15,8 +15,8 @@ void Console::run(){
 
     cout<<"? ";
     getline(cin,line);
-    ConsoleEvent * event = parser->parse(line);
-    cout<< event.getMessage()<<endl;
+    ConsoleEvent *event = parser->parse(line);
+    cout<< event->getMessage()<<endl;
     queue->push(event);
   }
 }

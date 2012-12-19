@@ -13,12 +13,13 @@ Controller::Controller() {
 
 /** Method responsible for run constantly and process events. */
 void Controller::run() {
-  Event recievedEvent;
+  Event *recievedEvent;
 
   while(true) {
     if(!eventQueue->isEmpty()) {
       recievedEvent = eventQueue->pop();
-      cout << "Recieved event of type: " << typeid(recievedEvent).name() << endl;
+      cout << "Recieved event of type: " << typeid(*recievedEvent).name() << endl;
+      delete recievedEvent;
     }
   }
 }

@@ -1,18 +1,17 @@
 #include "../include/eventQueue.hpp"
 #include "../include/events/event.hpp"
 
-void EventQueue::push(Event inputEvent) {
+void EventQueue::push(Event *inputEvent) {
   boost::lock_guard<boost::mutex> cond_lock(mut);
   boost::unique_lock<boost::shared_mutex> lock(queueMutex);
 
   queue.push(inputEvent);
-  cond.notify_all();
 
-  return;
+  cond.notify_all();
 }
 
-Event EventQueue::pop() {
-  Event returnEvent;
+Event * EventQueue::pop() {
+  Event * returnEvent;
 
   boost::unique_lock<boost::shared_mutex> lock(queueMutex);
   returnEvent = queue.front();

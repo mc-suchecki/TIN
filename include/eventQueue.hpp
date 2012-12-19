@@ -6,8 +6,8 @@
 
 class EventQueue {
   public:
-    void push(Event inputEvent);
-    Event pop();
+    void push(Event *inputEvent);
+    Event * pop();
 
     bool isEmpty();
 
@@ -15,6 +15,6 @@ class EventQueue {
     boost::mutex mut;
 
   private:
-    std::queue<Event> queue;
+    std::queue<Event *> queue;
     boost::shared_mutex queueMutex;
 };
