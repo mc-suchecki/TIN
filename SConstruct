@@ -9,7 +9,7 @@ core = [
   'core/controller.cpp',
   'core/eventQueue.cpp',
   'core/console.cpp',
-  #'core/parser.cpp'
+  'core/parser.cpp'
 ]
 connection = [
   #'core/serverConnection.cpp',
