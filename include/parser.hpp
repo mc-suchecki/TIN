@@ -7,6 +7,6 @@ class Parser{
 public:
 	Parser();
 	~Parser();
-	ConsoleEvent parse(std::string);
+	ConsoleEvent * parse(std::string);
 
 };
