@@ -2,8 +2,7 @@
 
 #include "eventQueue.hpp"
 #include "console.hpp"
-//class Console;
-//class EventQueue;
+#include <map>
 
 /**
  * Application controller from MVC pattern - responsible for 
@@ -20,4 +19,6 @@ class Controller {
   private:
     EventQueue *eventQueue;
     Console *console;
+
+    //std::map<std::type_info, Action> eventActionMap;
 };

@@ -3,12 +3,12 @@
 #include <iostream>
 #include "event.hpp"
 
-class ConsoleEvent : public Event{
+class ConsoleEvent : public Event {
   public:
-    ConsoleEvent(std::string message):message(message){
+    ConsoleEvent(std::string message) : message(message) {
     }
-    virtual ~ConsoleEvent(){};
-    std::string getMessage(){return message;}
-   private:
+    virtual ~ConsoleEvent() {};
+    std::string getMessage() {return message;}
+  private:
     std::string message;
 };

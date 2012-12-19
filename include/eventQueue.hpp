@@ -4,8 +4,6 @@
 #include <boost/thread.hpp>
 #include <queue>
 
-//class Event;
-
 class EventQueue {
   public:
     void push(Event inputEvent);
