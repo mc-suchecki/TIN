@@ -4,6 +4,8 @@
 #include "console.hpp"
 #include <map>
 
+class Logger;
+
 /**
  * Application controller from MVC pattern - responsible for 
  * proccessing events from EventsQueue class coordinating the
@@ -21,6 +23,7 @@ class Controller {
   private:
     EventQueue *eventQueue;
     Console *console;
+    Logger *logger;
 
     //map converting Event types to actions handling them
     std::map<const std::type_info *, MethodPointer> eventActionMap;

@@ -1,6 +1,7 @@
 #include "../include/controller.hpp"
 #include "../include/eventQueue.hpp"
 #include "../include/console.hpp"
+#include "../include/logger.hpp"
 
 #include "../include/events/consoleEvent.hpp"
 
@@ -11,6 +12,10 @@ Controller::Controller() {
   fillEventActionMap();
   eventQueue = new EventQueue();
   console = new Console(eventQueue);
+
+  // instanciate a logger, writing to standard output
+  logger = new Logger(cout);
+
   boost::thread consoleThread = boost::thread(&Console::run, console);
 }
 
@@ -22,6 +27,10 @@ void Controller::run() {
   while(true) {
     if(!eventQueue->isEmpty()) {
       recievedEvent = eventQueue->pop();
+
+      //log the reception of an event
+      logger->logEvent(recievedEvent);
+
       requestedAction = eventActionMap[&typeid(*recievedEvent)];
       (this->*requestedAction)(recievedEvent);
       delete recievedEvent;
@@ -31,9 +40,7 @@ void Controller::run() {
 
 /** Method responsible for filling map connecting Events to methods handling them. */
 void Controller::fillEventActionMap() {
-  ConsoleEvent consoleEvent;
-  eventActionMap.insert(std::make_pair(&typeid(consoleEvent),
-                                       &Controller::handleConsoleEvent));
+
   CreateConnectionEvent createConnectionEvent("");
   eventActionMap.insert(std::make_pair(&typeid(createConnectionEvent),
                                        &Controller::createConnection));
@@ -48,9 +55,7 @@ void Controller::fillEventActionMap() {
 /** Method responsible for creating new connection. */
 void Controller::createConnection(Event *event) {
   CreateConnectionEvent *createConnectionEvent = dynamic_cast<CreateConnectionEvent *>(event);
-  cout << "Received CreateConnection event with address: "
-   << createConnectionEvent->getAddress()
-   << endl;
+  //TODO
 }
 
 /** Method responsible for sending command to one of the servers using Connection. */
@@ -63,11 +68,4 @@ void Controller::sendCommand(Event *event) {
 void Controller::cancelAll(Event *event) {
   CancelAllEvent *cancelAllEvent = dynamic_cast<CancelAllEvent *>(event);
   //TODO
-}
-
-//TODO - remove me!
-void Controller::handleConsoleEvent(Event *event) {
-  ConsoleEvent *consoleEvent = dynamic_cast<ConsoleEvent *>(event);
-  cout << "Recieved console event! Type is: " << typeid(*event).name() << endl;
-  cout << "Receieved message is: " << consoleEvent->getMessage() << endl;
 }
