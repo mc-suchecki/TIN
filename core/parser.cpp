@@ -1,37 +1,57 @@
 #include "../include/parser.hpp"
 #include "../include/events/consoleEvent.hpp"
 #include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/phoenix.hpp>
 #include <vector>
 #include <string>
 
 using namespace std;
 namespace qi = boost::spirit::qi;
-
+namespace phoenix = boost::phoenix;
+using phoenix::push_back;
+using qi::_val;
+using qi::_1;
+using boost::spirit::lit;
+using boost::spirit::lexeme;
 
 Parser::Parser(){
 
 }
 
+void read(string const& a){
+  cout<<a;
+}
+
+
 ConsoleEvent * Parser::parse(string input){
   vector<double> v;
   vector<string> sv;
   bool result;
+  string address;
   result = qi::parse(
-     input.begin(), input.end(), 
-     (
-      //(+alpha_p)[push_back_a(sv)] >> ',' >> (+alpha_p)[push_back_a(sv)]
-      qi::double_
-     )
-     );
-  
+      input.begin(), input.end(), 
+      (
+      // (lit("connect") >> 
+        qi::as_string[+(qi::char_ - " ")]
+        >> " " >>
+        qi::as_string[+(qi::char_)]
+       // )
+      // | lit("send")
+      // | lit("disconnect")
+      ),
+      sv
+      );
+
   if(result){
-    for(int i=0; i<sv.size(); i++){
-      cout<<i<<": "<<sv[i];
+    if(sv[0] == "connect"){
+      return new CreateConnectionEvent(sv[1]);
     }
-    cout<<endl;
+    else if(sv[0] == "send"){
+      return new ConsoleEvent("tekst "+input);
+    }
   }
   else{
-    cout<<"Fail!"<<endl;
+    cout<<"Unrecognised command!"<<endl;
   }
-  return new ConsoleEvent("tekst "+input);
+  return NULL;
 }

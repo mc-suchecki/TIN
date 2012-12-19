@@ -34,7 +34,7 @@ void Controller::fillEventActionMap() {
   ConsoleEvent consoleEvent;
   eventActionMap.insert(std::make_pair(&typeid(consoleEvent),
                                        &Controller::handleConsoleEvent));
-  CreateConnectionEvent createConnectionEvent;
+  CreateConnectionEvent createConnectionEvent("");
   eventActionMap.insert(std::make_pair(&typeid(createConnectionEvent),
                                        &Controller::createConnection));
   SendCommandEvent sendCommandEvent;
@@ -48,7 +48,9 @@ void Controller::fillEventActionMap() {
 /** Method responsible for creating new connection. */
 void Controller::createConnection(Event *event) {
   CreateConnectionEvent *createConnectionEvent = dynamic_cast<CreateConnectionEvent *>(event);
-  //TODO
+  cout << "Received CreateConnection event with address: "
+   << createConnectionEvent->getAddress()
+   << endl;
 }
 
 /** Method responsible for sending command to one of the servers using Connection. */

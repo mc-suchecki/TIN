@@ -15,7 +15,8 @@ void Console::run() {
     cout << "? ";
     getline(cin, line);
     ConsoleEvent *event = parser->parse(line);
-    queue->push(event);
+    if(event)
+      queue->push(event);
     sleep(1);
   }
 }

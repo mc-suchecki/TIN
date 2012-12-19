@@ -15,8 +15,11 @@ class ConsoleEvent : public Event {
 
 class CreateConnectionEvent : public ConsoleEvent {
   public:
-    CreateConnectionEvent() {};
+    CreateConnectionEvent(std::string address):address(address) {};
     virtual ~CreateConnectionEvent() {};
+    std::string getAddress() {return address;};
+  private:
+    std::string address;
 };
 
 class SendCommandEvent : public ConsoleEvent {
