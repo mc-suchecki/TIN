@@ -12,12 +12,9 @@ core = [
   'core/parser.cpp',
   'core/logger.cpp'
 ]
+
 connection = [
-  #'core/serverConnection.cpp',
-  #'core/message.cpp'
-]
-client = [
-  'core/clientsConnection.cpp'
+  'core/connection.cpp'
 ]
 
 # defining application ingredients

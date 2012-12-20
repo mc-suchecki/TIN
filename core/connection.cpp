@@ -2,36 +2,44 @@
 ///
 /// @brief Implementation of the ClientsConnection class
 
+#include <iostream>
 #include <stdio.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include "../include/connection.hpp"
+#include "../include/eventQueue.hpp"
+#include "../include/events/connectionEvent.hpp"
 
 using std::string;
+using std::cout;
+using std::endl;
 
 void Connection::init() {
-  int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if(sockfd < 0) {
-    eventQueue->push(ConnectionFailedEvent("failed to open socket"));
+    eventQueue->push(new ConnectionFailedEvent("failed to open socket"));
     return;
   }
 
   struct sockaddr_in servAddr;
   memset(&servAddr, 0, sizeof(servAddr)); //TODO replace with generic fill()
-  serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(portsNr);
+  servAddr.sin_family = AF_INET;
+  servAddr.sin_port = htons(PORTS_NUMBER);
 
   if(inet_pton(AF_INET, IP_ADDRESS.c_str(), &servAddr.sin_addr)<=0) {
-    eventQueue->push(
-      ConnectionFailedEvent("failed to convert given IP address to native type"));
+    string errorMsg = "failed to convert given IP address to native type";
+    eventQueue->push(new ConnectionFailedEvent(errorMsg));
     return;
   }
 
   if(connect(sockfd, (struct sockaddr *)&servAddr, sizeof(servAddr)) < 0) {
-    eventQueue->push(ConnectionFailedEvent("failed to connect to remote server"));
+    string errorMsg = "failed to connect to remote server";
+    eventQueue->push(new ConnectionFailedEvent(errorMsg));
     return;
   }
 
-  eventQueue->push(ConnectionEstablishedEvent());
+  eventQueue->push(new ConnectionEstablishedEvent());
 }
 
 void Connection::killAll() {
@@ -39,20 +47,28 @@ void Connection::killAll() {
 }
 
 void Connection::execute(const string &command) {
-  strncpy(command.c_str(&buffer, &(command.c_str()), 256));
+  strncpy(buffer, command.c_str(), 256);
   int n = write(sockfd, buffer, strlen(buffer));
   if(n < 0) {
-    eventQueue->push(CommandSendingFailedEvent());
+    string errMsg = "failed to write to socket";
+    eventQueue->push(new CommandSendingFailedEvent(errMsg));
+    //std::cout << "Failed to write to socket" << std::endl;
     return;
   }
 
-  eventQueue->push(CommandSentEvent()); 
+  eventQueue->push(new CommandSentEvent()); 
+  //std::cout << "Command sent" << std::endl;
 
+  memset(buffer,0,256);
   n = read(sockfd, buffer, 255);
+  //std::cout << "server: started execution of tasks" << std::endl;
   if(n<0) {
-    eventQueue->push(ReceivingResultsFailureEvent("Couldn't read data from socket"));
+    string errorMsg = "Couldn't read data from socket";
+    eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
+    //std::cout << "Couldn't read from socket" << std::endl;
     return;
   }
 
+  cout << buffer << endl;
   //TODO put read data into eventQueue
 }
