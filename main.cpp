@@ -5,11 +5,11 @@
 #include "include/controller.hpp"
 
 int main() {
-  Controller *controller = new Controller();
+/*  Controller *controller = new Controller();
   boost::thread controllerThread = boost::thread(&Controller::run, controller);
-  controllerThread.join();
+  controllerThread.join();*/
 
-/*  EventQueue eventQueue;
+  EventQueue eventQueue;
   Connection connection(&eventQueue,"127.0.0.1", 100);
   connection.init();
 
@@ -18,6 +18,6 @@ int main() {
     std::cout << "Wpisz wiadomosc:"<<std::endl;
     std::cin >> testCommand;
     connection.execute(testCommand);
-  }*/
+  }
   return 0;
 }
