@@ -1,0 +1,16 @@
+# configuring environment
+CCFLAGS = '-Wall -pedantic'
+LINKFLAGS = '-lboost_thread -lboost_system'
+env = Environment(CCFLAGS = CCFLAGS, LINKFLAGS = LINKFLAGS)
+
+# defining source files list
+main = [ 'main.cpp' ]
+core = [
+  'ConnectionHandler.cpp',
+  'Server.cpp'
+]
+
+# defining application ingredients
+app = core
+program = env.Program(target = 'Server', source = app + main)
+Default(program)
