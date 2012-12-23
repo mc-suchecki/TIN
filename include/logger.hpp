@@ -1,14 +1,14 @@
 #pragma once
 
 /**
- * simple logging utilitu
+ * Simple logging utility.
  */
 
 #include <ostream>
 
 class Event;
 
-class Logger{
+class Logger {
   public:
     Logger(std::ostream& out);
     virtual ~Logger(){};

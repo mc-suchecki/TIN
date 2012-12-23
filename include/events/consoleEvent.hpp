@@ -11,22 +11,27 @@ class ConsoleEvent : public Event {
     ConsoleEvent(std::string message = "") : message(message) {
     }
     virtual ~ConsoleEvent() {};
-    virtual std::string getMessage() {return "This is a console event";}
-  private:
+    virtual std::string getMessage() = 0;
+  protected:
     std::string message;
 };
 
 class CreateConnectionEvent : public ConsoleEvent {
   public:
-    CreateConnectionEvent(std::string address,
-        int port = 0):address(address),port(port) {};
+    CreateConnectionEvent(std::string address = "", int port = 0)
+      : address(address), port(port) {};
     virtual ~CreateConnectionEvent() {};
-    std::string getAddress() {return address;};
-    int getPort() {return port;};
     virtual std::string getMessage() {
       std::stringstream out;
       out << port;
-      return "Connect to "+address+" on port "+out.str();}
+      if(port == 0)
+        return "Connect to " + address + " on default port.";
+      else
+        return "Connect to " + address + " on port " + out.str() + ".";
+    }
+
+    std::string getAddress() {return address;};
+    int getPort() {return port;};
   private:
     std::string address;
     int port;
@@ -34,12 +39,26 @@ class CreateConnectionEvent : public ConsoleEvent {
 
 class SendCommandEvent : public ConsoleEvent {
   public:
-    SendCommandEvent() {};
+    SendCommandEvent(std::string address = "", std::string command = "")
+      : ConsoleEvent("Send to " + address + " command: " + command + "."),
+        address(address), command(command) {};
     virtual ~SendCommandEvent() {};
+    virtual std::string getMessage() {return message;};
+    std::string getAddress() {return address;};
+    std::string getCommand() {return command;};
+  private:
+    std::string address;
+    std::string command;
 };
 
 class CancelAllEvent : public ConsoleEvent {
   public:
-    CancelAllEvent() {};
+    CancelAllEvent(std::string address = "")
+      : ConsoleEvent("Cancel all commands on " + address + "."),
+      address(address) {};
     virtual ~CancelAllEvent() {};
+    virtual std::string getMessage() {return message;};
+    std::string getAddress() {return address;};
+  private:
+    std::string address;
 };

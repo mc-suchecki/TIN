@@ -47,7 +47,7 @@ void ConnectionHandler::startCommunication()
             error("ERROR on accept");
 
         bzero(buffer,256);
-        while(n = read(newsockfd,buffer,255))
+        while((n = read(newsockfd,buffer,255)))
         {
             if (n < 0)
                 error("ERROR reading from socket");

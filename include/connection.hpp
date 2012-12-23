@@ -27,7 +27,7 @@ class Connection {
     void init();
     void execute(const std::string &command);
     void killAll();
-    std::string getIPAddress();
+    std::string getAddress();
 
   private:
     EventQueue * const eventQueue;

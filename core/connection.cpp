@@ -1,6 +1,6 @@
 /// @author Jacek Witkowski
 ///
-/// @brief Implementation of the ClientsConnection class
+/// @brief Implementation of the ClientsConnection class.
 
 #include <iostream>
 #include <stdio.h>
@@ -18,7 +18,7 @@ using std::endl;
 void Connection::init() {
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if(sockfd < 0) {
-    eventQueue->push(new ConnectionFailedEvent("failed to open socket"));
+    eventQueue->push(new ConnectionFailedEvent("Failed to open socket."));
     return;
   }
 
@@ -28,13 +28,13 @@ void Connection::init() {
   servAddr.sin_port = htons(PORTS_NUMBER);
 
   if(inet_pton(AF_INET, IP_ADDRESS.c_str(), &servAddr.sin_addr)<=0) {
-    string errorMsg = "failed to convert given IP address to native type";
+    string errorMsg = "Failed to convert given IP address to native type.";
     eventQueue->push(new ConnectionFailedEvent(errorMsg));
     return;
   }
 
   if(connect(sockfd, (struct sockaddr *)&servAddr, sizeof(servAddr)) < 0) {
-    string errorMsg = "failed to connect to remote server";
+    string errorMsg = "Failed to connect to remote server.";
     eventQueue->push(new ConnectionFailedEvent(errorMsg));
     return;
   }
@@ -50,7 +50,7 @@ void Connection::execute(const string &command) {
   strncpy(buffer, command.c_str(), 256);
   int n = write(sockfd, buffer, strlen(buffer));
   if(n < 0) {
-    string errMsg = "failed to write to socket";
+    string errMsg = "Failed to write to socket.";
     eventQueue->push(new CommandSendingFailedEvent(errMsg));
     //std::cout << "Failed to write to socket" << std::endl;
     return;
@@ -63,7 +63,7 @@ void Connection::execute(const string &command) {
   n = read(sockfd, buffer, 255);
   //std::cout << "server: started execution of tasks" << std::endl;
   if(n<0) {
-    string errorMsg = "Couldn't read data from socket";
+    string errorMsg = "Couldn't read data from socket.";
     eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
     //std::cout << "Couldn't read from socket" << std::endl;
     return;
@@ -73,6 +73,6 @@ void Connection::execute(const string &command) {
   //TODO put read data into eventQueue
 }
 
-std::string Connection::getIPAddress() {
+std::string Connection::getAddress() {
   return IP_ADDRESS;
 }

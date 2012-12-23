@@ -15,7 +15,7 @@ class ConnectionEvent : public Event {
 class ConnectionEstablishedEvent: public ConnectionEvent {
   public:
     ConnectionEstablishedEvent():
-      ConnectionEvent("connection established successfully") {}
+      ConnectionEvent("Connection established successfully.") {}
     virtual ~ConnectionEstablishedEvent() {};
 };
 
@@ -27,7 +27,7 @@ class ConnectionFailedEvent: public ConnectionEvent {
 
 class CommandSentEvent: public ConnectionEvent {
   public:
-    CommandSentEvent(): ConnectionEvent("Command sent successfully") {}
+    CommandSentEvent(): ConnectionEvent("Command sent successfully.") {}
     virtual ~CommandSentEvent() {}
 };
 
@@ -41,7 +41,7 @@ class CommandSendingFailedEvent: public ConnectionEvent {
 class ActionDoneEvent : public ConnectionEvent {
   public:
     ActionDoneEvent(void *cont):
-      ConnectionEvent("All commands completed"), content(cont) {};
+      ConnectionEvent("All commands completed."), content(cont) {};
     virtual ~ActionDoneEvent() {};
     void *content; //FIXME change it to file's path or sth
 };

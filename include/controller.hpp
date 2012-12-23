@@ -9,7 +9,7 @@
 /**
  * Application controller from MVC pattern - responsible for 
  * proccessing events from EventsQueue class coordinating the
- * communication within whole application.
+ * communication within the whole application.
  */
 class Controller {
   typedef void (Controller::*MethodPointer)(Event *);
@@ -39,7 +39,4 @@ class Controller {
 
     //methods handling particular connection events
     void displayMessage(Event *event);
-
-    //temporary method for testing puposes - TODO delete me!
-    void handleConsoleEvent(Event *event);
 };

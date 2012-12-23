@@ -24,7 +24,6 @@ void Controller::run() {
   while(true) {
     if(!eventQueue->isEmpty()) {
       recievedEvent = eventQueue->pop();
-      logger->logEvent(recievedEvent);
       if(eventActionMap.find(&typeid(*recievedEvent)) != eventActionMap.end()) { 
         requestedAction = eventActionMap[&typeid(*recievedEvent)];
         (this->*requestedAction)(recievedEvent);
@@ -37,10 +36,7 @@ void Controller::run() {
 /** Method responsible for filling map connecting Events to methods handling them. */
 void Controller::fillEventActionMap() {
   //console events
-  //ConsoleEvent consoleEvent;
-  //eventActionMap.insert(std::make_pair(&typeid(consoleEvent),
-        //&Controller::handleConsoleEvent));
-  CreateConnectionEvent createConnectionEvent("");
+  CreateConnectionEvent createConnectionEvent;
   eventActionMap.insert(std::make_pair(&typeid(createConnectionEvent),
         &Controller::createConnection));
   SendCommandEvent sendCommandEvent;
@@ -52,22 +48,22 @@ void Controller::fillEventActionMap() {
 
   //connection events
   ConnectionEstablishedEvent connectionEstablishedEvent;
-  eventActionMap.insert(std::make_pair(&typeid(cancelAllEvent),
+  eventActionMap.insert(std::make_pair(&typeid(connectionEstablishedEvent),
         &Controller::displayMessage));
   ConnectionFailedEvent connectionFailedEvent;
-  eventActionMap.insert(std::make_pair(&typeid(cancelAllEvent),
+  eventActionMap.insert(std::make_pair(&typeid(connectionFailedEvent),
         &Controller::displayMessage));
   CommandSentEvent commandSentEvent;
-  eventActionMap.insert(std::make_pair(&typeid(cancelAllEvent),
+  eventActionMap.insert(std::make_pair(&typeid(commandSentEvent),
         &Controller::displayMessage));
   CommandSendingFailedEvent commandSendingFailedEvent();
-  eventActionMap.insert(std::make_pair(&typeid(cancelAllEvent),
+  eventActionMap.insert(std::make_pair(&typeid(commandSendingFailedEvent),
         &Controller::displayMessage));
   ActionDoneEvent actionDoneEvent();
-  eventActionMap.insert(std::make_pair(&typeid(cancelAllEvent),
+  eventActionMap.insert(std::make_pair(&typeid(actionDoneEvent),
         &Controller::displayMessage));
   ReceivingResultsFailureEvent receivingResultsFailureEvent();
-  eventActionMap.insert(std::make_pair(&typeid(cancelAllEvent),
+  eventActionMap.insert(std::make_pair(&typeid(receivingResultsFailureEvent),
         &Controller::displayMessage));
 }
 
@@ -79,24 +75,53 @@ void Controller::createConnection(Event *event) {
     new Connection(eventQueue, createConnectionEvent->getAddress(), 100);
   newConnection->init();
   activeConnections.push_back(newConnection);
-  cout << "Received CreateConnectionEvent with ip: " << createConnectionEvent->getAddress() << endl;
+  logger->logEvent(createConnectionEvent);
 }
 
 /** Method responsible for sending command to one of the servers using Connection. */
 void Controller::sendCommand(Event *event) {
   SendCommandEvent *sendCommandEvent = dynamic_cast<SendCommandEvent *>(event);
-  //TODO
+  vector<Connection *>::iterator it;
+
+  //find Connection with desired ip and send command
+  for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
+    if(sendCommandEvent->getAddress() == (*it)->getAddress()) {
+      (*it)->execute(sendCommandEvent->getCommand());
+      logger->logEvent(sendCommandEvent);
+      return;
+    }
+  }
+
+  //Connection not found - prompt user
+  CommandSendingFailedEvent *errorEvent =
+    new CommandSendingFailedEvent("Connection with this IP not found!");
+  logger->logEvent(errorEvent);
+  delete errorEvent;
 }
 
 /** Method responsible for cancelling all commands on one of the servers. */
 void Controller::cancelAll(Event *event) {
   CancelAllEvent *cancelAllEvent = dynamic_cast<CancelAllEvent *>(event);
-  //TODO
+  vector<Connection *>::iterator it;
+
+  //find Connection with desired ip and send command
+  for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
+    if(cancelAllEvent->getAddress() == (*it)->getAddress()) {
+      (*it)->killAll();
+      logger->logEvent(cancelAllEvent);
+      return;
+    }
+  }
+
+  //Connection not found - prompt user
+  CommandSendingFailedEvent *errorEvent =
+    new CommandSendingFailedEvent("Connection with this IP not found!");
+  logger->logEvent(errorEvent);
+  delete errorEvent;
 }
 
-//TODO write comment
+/** Method used to handle ConnectionEvents - it simply displays some message. */
 void Controller::displayMessage(Event *event) {
   ConnectionEvent *connectionEvent = dynamic_cast<ConnectionEvent *>(event);
-  cout << "Recieved connection event! Type is: " << typeid(*event).name() << endl;
-  cout << "Receieved message is: " << connectionEvent->getMessage() << endl;
+  logger->logEvent(connectionEvent);
 }
