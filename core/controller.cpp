@@ -16,7 +16,7 @@ Controller::Controller() {
   logger = new Logger(cout);
 }
 
-/** Method responsible for run constantly and process events. */
+/** Method responsible for running constantly and processing events. */
 void Controller::run() {
   Event *receivedEvent;
   MethodPointer requestedAction;
@@ -24,6 +24,8 @@ void Controller::run() {
   while(true) {
     if(!eventQueue->isEmpty()) {
       receivedEvent = eventQueue->pop();
+
+      //find requested action for received event
       if(eventActionMap.find(&typeid(*receivedEvent)) != eventActionMap.end()) { 
         requestedAction = eventActionMap[&typeid(*receivedEvent)];
         (this->*requestedAction)(receivedEvent);
@@ -33,6 +35,7 @@ void Controller::run() {
         cout << "ERROR: Event handler not found for: "
           << typeid(*receivedEvent).name() << endl;
       }
+
       delete receivedEvent;
     }
   }
@@ -97,7 +100,7 @@ void Controller::sendCommand(Event *event) {
     }
   }
 
-  //Connection not found - prompt user
+  //desired Connection not found - prompt user
   CommandSendingFailedEvent *errorEvent =
     new CommandSendingFailedEvent("Connection with this IP was not found!");
   logger->logEvent(errorEvent);
@@ -109,7 +112,7 @@ void Controller::cancelAll(Event *event) {
   CancelAllEvent *cancelAllEvent = dynamic_cast<CancelAllEvent *>(event);
   vector<Connection *>::iterator it;
 
-  //find Connection with desired ip and send command
+  //find Connection with desired ip and cancel his commands
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
     if(cancelAllEvent->getAddress() == (*it)->getAddress()) {
       (*it)->killAll();
@@ -118,7 +121,7 @@ void Controller::cancelAll(Event *event) {
     }
   }
 
-  //Connection not found - prompt user
+  //desired Connection not found - prompt user
   CommandSendingFailedEvent *errorEvent =
     new CommandSendingFailedEvent("Connection with this IP was not found!");
   logger->logEvent(errorEvent);
@@ -134,8 +137,8 @@ void Controller::logMessage(Event *event) {
 /** Method used to handle ActionDoneEvents - it logs the event and saves the results. */
 void Controller::saveResults(Event *event) {
   ActionDoneEvent *actionDoneEvent = dynamic_cast<ActionDoneEvent *>(event);
-  void *results = actionDoneEvent->getResults();
+  //void *results = actionDoneEvent->getResults();
   //TODO save results to a file
-  delete results;
+  //TODO - how to delete results? "delete results" generates warning.
   logger->logEvent(actionDoneEvent);
 }
