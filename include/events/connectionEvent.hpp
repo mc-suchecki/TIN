@@ -40,10 +40,12 @@ class CommandSendingFailedEvent: public ConnectionEvent {
 
 class ActionDoneEvent : public ConnectionEvent {
   public:
-    ActionDoneEvent(void *cont):
-      ConnectionEvent("All commands completed."), content(cont) {};
+    ActionDoneEvent(void *results):
+      ConnectionEvent("All commands completed."), results(results) {};
     virtual ~ActionDoneEvent() {};
-    void *content; //FIXME change it to file's path or sth
+    void * getResults() {return results;};
+  private:
+    void *results; //FIXME change it to file's path or sth
 };
 
 class ReceivingResultsFailureEvent: public ConnectionEvent {

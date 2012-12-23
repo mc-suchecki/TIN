@@ -18,9 +18,11 @@ class Controller {
     Controller();
     ~Controller();
 
+    //runs constantly and process events
     void run();
 
   private:
+    //connections with other objects
     EventQueue *eventQueue;
     Console *console;
     Logger *logger;
@@ -38,5 +40,6 @@ class Controller {
     void cancelAll(Event *event);
 
     //methods handling particular connection events
-    void displayMessage(Event *event);
+    void logMessage(Event *event);
+    void saveResults(Event *event);
 };

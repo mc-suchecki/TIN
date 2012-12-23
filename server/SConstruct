@@ -12,5 +12,5 @@ core = [
 
 # defining application ingredients
 app = core
-program = env.Program(target = 'Server', source = app + main)
+program = env.Program(target = 'server', source = app + main)
 Default(program)

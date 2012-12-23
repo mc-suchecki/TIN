@@ -18,17 +18,22 @@ Controller::Controller() {
 
 /** Method responsible for run constantly and process events. */
 void Controller::run() {
-  Event *recievedEvent;
+  Event *receivedEvent;
   MethodPointer requestedAction;
 
   while(true) {
     if(!eventQueue->isEmpty()) {
-      recievedEvent = eventQueue->pop();
-      if(eventActionMap.find(&typeid(*recievedEvent)) != eventActionMap.end()) { 
-        requestedAction = eventActionMap[&typeid(*recievedEvent)];
-        (this->*requestedAction)(recievedEvent);
+      receivedEvent = eventQueue->pop();
+      if(eventActionMap.find(&typeid(*receivedEvent)) != eventActionMap.end()) { 
+        requestedAction = eventActionMap[&typeid(*receivedEvent)];
+        (this->*requestedAction)(receivedEvent);
+      } else {
+        //following code should never be executed - it exists just in case
+        //TODO - remove this after the project is done
+        cout << "ERROR: Event handler not found for: "
+          << typeid(*receivedEvent).name() << endl;
       }
-      delete recievedEvent;
+      delete receivedEvent;
     }
   }
 }
@@ -49,22 +54,22 @@ void Controller::fillEventActionMap() {
   //connection events
   ConnectionEstablishedEvent connectionEstablishedEvent;
   eventActionMap.insert(std::make_pair(&typeid(connectionEstablishedEvent),
-        &Controller::displayMessage));
+        &Controller::logMessage));
   ConnectionFailedEvent connectionFailedEvent;
   eventActionMap.insert(std::make_pair(&typeid(connectionFailedEvent),
-        &Controller::displayMessage));
+        &Controller::logMessage));
   CommandSentEvent commandSentEvent;
   eventActionMap.insert(std::make_pair(&typeid(commandSentEvent),
-        &Controller::displayMessage));
+        &Controller::logMessage));
   CommandSendingFailedEvent commandSendingFailedEvent();
   eventActionMap.insert(std::make_pair(&typeid(commandSendingFailedEvent),
-        &Controller::displayMessage));
+        &Controller::logMessage));
   ActionDoneEvent actionDoneEvent();
   eventActionMap.insert(std::make_pair(&typeid(actionDoneEvent),
-        &Controller::displayMessage));
+        &Controller::saveResults));
   ReceivingResultsFailureEvent receivingResultsFailureEvent();
   eventActionMap.insert(std::make_pair(&typeid(receivingResultsFailureEvent),
-        &Controller::displayMessage));
+        &Controller::logMessage));
 }
 
 /** Method responsible for creating new connection. */
@@ -94,7 +99,7 @@ void Controller::sendCommand(Event *event) {
 
   //Connection not found - prompt user
   CommandSendingFailedEvent *errorEvent =
-    new CommandSendingFailedEvent("Connection with this IP not found!");
+    new CommandSendingFailedEvent("Connection with this IP was not found!");
   logger->logEvent(errorEvent);
   delete errorEvent;
 }
@@ -115,13 +120,22 @@ void Controller::cancelAll(Event *event) {
 
   //Connection not found - prompt user
   CommandSendingFailedEvent *errorEvent =
-    new CommandSendingFailedEvent("Connection with this IP not found!");
+    new CommandSendingFailedEvent("Connection with this IP was not found!");
   logger->logEvent(errorEvent);
   delete errorEvent;
 }
 
-/** Method used to handle ConnectionEvents - it simply displays some message. */
-void Controller::displayMessage(Event *event) {
+/** Method used to handle ConnectionEvents - it simply logs some message. */
+void Controller::logMessage(Event *event) {
   ConnectionEvent *connectionEvent = dynamic_cast<ConnectionEvent *>(event);
   logger->logEvent(connectionEvent);
+}
+
+/** Method used to handle ActionDoneEvents - it logs the event and saves the results. */
+void Controller::saveResults(Event *event) {
+  ActionDoneEvent *actionDoneEvent = dynamic_cast<ActionDoneEvent *>(event);
+  void *results = actionDoneEvent->getResults();
+  //TODO save results to a file
+  delete results;
+  logger->logEvent(actionDoneEvent);
 }
