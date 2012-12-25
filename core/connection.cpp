@@ -28,7 +28,7 @@ void Connection::init() {
   servAddr.sin_port = htons(PORTS_NUMBER);
 
   if(inet_pton(AF_INET, IP_ADDRESS.c_str(), &servAddr.sin_addr)<=0) {
-    string errorMsg = "failed to convert given IP address to native type";
+    string errorMsg = "Failed to convert given IP "+IP_ADDRESS+" address to native type.";
     eventQueue->push(new ConnectionFailedEvent(errorMsg));
     return;
   }
