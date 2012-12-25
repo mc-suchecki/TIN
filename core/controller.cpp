@@ -93,7 +93,7 @@ void Controller::sendCommand(Event *event) {
 
   //find Connection with desired ip and send command
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
-    if(sendCommandEvent->getAddress() == (*it)->getAddress()) {
+    if(sendCommandEvent->getAddress() == (*it)->getIPAddress()) {
       (*it)->execute(sendCommandEvent->getCommand());
       logger->logEvent(sendCommandEvent);
       return;
@@ -114,7 +114,7 @@ void Controller::cancelAll(Event *event) {
 
   //find Connection with desired ip and cancel his commands
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
-    if(cancelAllEvent->getAddress() == (*it)->getAddress()) {
+    if(cancelAllEvent->getAddress() == (*it)->getIPAddress()) {
       (*it)->killAll();
       logger->logEvent(cancelAllEvent);
       return;

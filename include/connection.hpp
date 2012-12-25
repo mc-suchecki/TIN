@@ -27,7 +27,7 @@ class Connection {
     void init();
     void execute(const std::string &command);
     void killAll();
-    std::string getAddress();
+    std::string getIPAddress();
 
   private:
     EventQueue * const eventQueue;
@@ -35,5 +35,29 @@ class Connection {
     const PortsNr PORTS_NUMBER;  
     char buffer[256]; //FIXME
     int sockfd;
+
+    char* serialize(const std::string &command);
 };
 
+class Message {
+  public:
+    virtual const char * serialize() = 0;
+    virtual ~Message() {};
+
+  protected:
+    char * serializedContent;
+};
+
+class Command: public Message{
+  public:
+    Command(const std::string &cmd): command(cmd) {
+      serializedContent = 0;
+    }
+    virtual ~Command() {
+      delete serializedContent;
+    }
+    virtual const char * serialize();
+
+  private:
+    const std::string command;
+};
