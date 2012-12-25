@@ -1,6 +1,6 @@
 /// @author Jacek Witkowski
 ///
-/// @brief Implementation of the ClientsConnection class
+/// @brief Implementation of the Connection class.
 
 #include <iostream>
 #include <stdio.h>
@@ -18,7 +18,7 @@ using std::endl;
 void Connection::init() {
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if(sockfd < 0) {
-    eventQueue->push(new ConnectionFailedEvent("failed to open socket"));
+    eventQueue->push(new ConnectionFailedEvent("Failed to open socket"));
     return;
   }
 
@@ -34,7 +34,7 @@ void Connection::init() {
   }
 
   if(connect(sockfd, (struct sockaddr *)&servAddr, sizeof(servAddr)) < 0) {
-    string errorMsg = "failed to connect to remote server";
+    string errorMsg = "Failed to connect to remote server";
     eventQueue->push(new ConnectionFailedEvent(errorMsg));
     return;
   }
@@ -50,7 +50,7 @@ void Connection::execute(const string &command) {
   strncpy(buffer, command.c_str(), 256);
   int n = write(sockfd, buffer, strlen(buffer));
   if(n < 0) {
-    string errMsg = "failed to write to socket";
+    string errMsg = "Failed to write to socket";
     eventQueue->push(new CommandSendingFailedEvent(errMsg));
     //std::cout << "Failed to write to socket" << std::endl;
     return;
