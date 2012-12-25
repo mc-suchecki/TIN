@@ -102,7 +102,7 @@ void Controller::sendCommand(Event *event) {
 
   //desired Connection not found - prompt user
   CommandSendingFailedEvent *errorEvent =
-    new CommandSendingFailedEvent("Connection with this IP was not found!");
+    new CommandSendingFailedEvent("Connection with IP: "+sendCommandEvent->getAddress()+" was not found!");
   logger->logEvent(errorEvent);
   delete errorEvent;
 }

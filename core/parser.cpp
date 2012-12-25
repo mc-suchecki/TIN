@@ -20,26 +20,11 @@ Parser::Parser(){
 }
 
 
-//template <typename Iterator>
-//bool adder(Iterator first, Iterator last, 
-//
-/*
-   struct events_ : qi::symbols<char, Event*>
-   {
-   events_()
-   {
-   add
-   ("connect" , new CreateConnectionEvent(""))
-   ("send"   , new ConsoleEvent())
-   ;
-   }
-   } events;
-   */
-
-ConsoleEvent * Parser::parse(string input){
+vector<ConsoleEvent*> Parser::parse(string input){
+  vector<ConsoleEvent*> retVector;
   bool result;
   string action;
-  string address;
+  vector<string> addresses;
   string command;
   int port = 0;
   result = qi::parse(
@@ -48,14 +33,22 @@ ConsoleEvent * Parser::parse(string input){
        (
         lit("connect")[ref(action) = "connect"]
         >> " "
-        >> qi::as_string[+(qi::char_ - " ")][ref(address) = _1]
+        >> qi::as_string[+(qi::char_ - " " - ",")][push_back(ref(addresses), _1)]
+        >> *(
+          ", "
+          >> qi::as_string[+(qi::char_ - " " - ",")][push_back(ref(addresses),_1)]
+         )
         >> *(" " >>
           (qi::int_)[ref(port) = _1])
        )
        | (
          lit("send")[ref(action) = "send"]
          >> " "
-         >> qi::as_string[+(qi::char_ - " ")][ref(address) = _1]
+         >> qi::as_string[+(qi::char_ - " " - ",")][push_back(ref(addresses),_1)]
+         >> *(
+           ", "
+           >> qi::as_string[+(qi::char_ - " " - ",")][push_back(ref(addresses),_1)]
+          )
          >> " "
          >> qi::as_string[+(qi::char_ - " ")][ref(command) = _1]
          )
@@ -64,20 +57,18 @@ ConsoleEvent * Parser::parse(string input){
          )
       )
   );
-
   if(result){
     if(action == "connect"){
-      if(port!=0)
-        return new CreateConnectionEvent(address, port);
-      else
-        return new CreateConnectionEvent(address);
+      for(unsigned int i = 0; i < addresses.size();++i)
+        retVector.push_back(new CreateConnectionEvent(addresses[i], port));
     }
     else if(action == "send"){
-      return new SendCommandEvent(address, command);
+      for(unsigned int i = 0; i < addresses.size();++i)
+        retVector.push_back(new SendCommandEvent(addresses[i], command));
     }
   }
   else {
     cout << "Unrecognised command!" << endl;
   }
-  return NULL;
+  return retVector;
 }

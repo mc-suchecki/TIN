@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <vector>
 
 class ConsoleEvent;
 
@@ -8,6 +9,6 @@ class Parser{
   public:
     Parser();
     ~Parser();
-    ConsoleEvent * parse(std::string);
+    std::vector<ConsoleEvent*> parse(std::string);
 
 };
