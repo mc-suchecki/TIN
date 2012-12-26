@@ -142,3 +142,4 @@ void Controller::saveResults(Event *event) {
   //TODO - how to delete results? "delete results" generates warning.
   logger->logEvent(actionDoneEvent);
 }
+

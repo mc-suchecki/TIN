@@ -4,6 +4,8 @@
 
 #include <iostream>
 #include <stdio.h>
+#include <boost/thread.hpp>
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -11,11 +13,42 @@
 #include "../include/eventQueue.hpp"
 #include "../include/events/connectionEvent.hpp"
 
-using std::string;
-using std::cout;
-using std::endl;
+using namespace std;
+
+Connection::Connection(EventQueue * const evQ, IPAddress addr, PortsNr p):
+  eventQueue(evQ), IP_ADDRESS(addr), PORTS_NUMBER(p){
+
+  stopLoop = false;
+  runThread = boost::thread(&Connection::run, this);
+  sockfd = -1;
+}
+
+Connection::~Connection() {
+  stopLoop = true;
+  runThread.join();
+}
+
+void Connection::run() {
+  while(!stopLoop){
+     Action *action = actionsQueue.pop();
+     action->execute();
+     delete action;
+  }
+}
 
 void Connection::init() {
+  actionsQueue.push(new InitAction(this));
+}
+
+void Connection::execute(const Command &command) {
+  actionsQueue.push(new ExecuteAction(this,command));
+}
+
+void Connection::killAll() {
+  actionsQueue.push(new KillAllAction(this));
+}
+
+void Connection::init_internal() {
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if(sockfd < 0) {
     eventQueue->push(new ConnectionFailedEvent("Failed to open socket"));
@@ -42,17 +75,20 @@ void Connection::init() {
   eventQueue->push(new ConnectionEstablishedEvent());
 }
 
-void Connection::killAll() {
+void Connection::killAll_internal() {
   //TODO  
 }
 
-void Connection::execute(const string &command) {
-  strncpy(buffer, command.c_str(), 256);
+void Connection::execute_internal(const Command &command) {
+  if(sockfd < 0)
+    cerr<< "(" << IP_ADDRESS << ") Cannot execute command on uninitialized connection" << endl;
+
+  strncpy(buffer, command.serialize(), 256);
   int n = write(sockfd, buffer, strlen(buffer));
   if(n < 0) {
-    string errMsg = "Failed to write to socket";
+    string errMsg = "(" + IP_ADDRESS + ") Failed to write to socket";
     eventQueue->push(new CommandSendingFailedEvent(errMsg));
-    //std::cout << "Failed to write to socket" << std::endl;
+    cerr << errMsg << endl;
     return;
   }
 
@@ -63,9 +99,9 @@ void Connection::execute(const string &command) {
   n = read(sockfd, buffer, 255);
   //std::cout << "server: started execution of tasks" << std::endl;
   if(n<0) {
-    string errorMsg = "Couldn't read data from socket";
+    string errorMsg = "(" + IP_ADDRESS + ") Couldn't read data from socket";
     eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
-    //std::cout << "Couldn't read from socket" << std::endl;
+    cerr << errorMsg << std::endl;
     return;
   }
 
@@ -77,12 +113,10 @@ std::string Connection::getIPAddress() {
   return IP_ADDRESS;
 }
 
-const char * Command::serialize() {
-  if(serializedContent)
-    return serializedContent;
-
-  serializedContent = new char[command.size()+1];
+const char * Command::serialize() const{
+  char *serializedContent = new char[command.size()+1];
   strcpy(serializedContent,command.c_str());
 
   return serializedContent;
 }
+
