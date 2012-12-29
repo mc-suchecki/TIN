@@ -1,0 +1,13 @@
+## send
+send 123.123.123.123 command to execute
+send 123.123.123.123, 234.234.234.234 command to execute
+
+## sendf (send from file)
+send 123.123.123.123 ./file/path
+send 123.123.123.123 ./file/path ./file/path2
+send 123.123.123.123, 234.234.234.234 ./file/path
+send 123.123.123.123, 234.234.234.234 ./file/path ./file/path2
+
+file contents:
+command to execute 1
+command to execute 2
