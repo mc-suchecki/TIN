@@ -15,7 +15,7 @@ class Controller {
   typedef void (Controller::*MethodPointer)(Event *);
 
   public:
-    Controller();
+    Controller(int argc, char * argv[]);
     ~Controller();
 
     //runs constantly and process events

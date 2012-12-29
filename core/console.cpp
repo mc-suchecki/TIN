@@ -14,6 +14,7 @@ void Console::run() {
     string line;
     cout << "? ";
     getline(cin, line);
+    history.push_back(line);
     vector<ConsoleEvent*> events = parser->parse(line);
     if(events.size()>0)
       for(int i = 0; i < events.size(); ++i)

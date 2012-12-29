@@ -2,8 +2,8 @@
 #include "include/connection.hpp"
 #include "include/controller.hpp"
 
-int main() {
-  Controller *controller = new Controller();
+int main(int argc, char * argv[]) {
+  Controller *controller = new Controller(argc, argv);
   boost::thread controllerThread = boost::thread(&Controller::run, controller);
   controllerThread.join();
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "eventQueue.hpp"
+#include <vector>
+#include <string>
 
 class Parser;
 
@@ -17,4 +19,6 @@ class Console {
   private:	
     Parser * parser;
     EventQueue * queue;
+    ///command history
+    std::vector<std::string> history;
 };

@@ -1,6 +1,6 @@
 # configuring environment
 CCFLAGS = '-Wall -pedantic'
-LINKFLAGS = '-lboost_thread -lboost_system'
+LINKFLAGS = '-lboost_thread -lboost_system -lboost_program_options'
 env = Environment(CCFLAGS = CCFLAGS, LINKFLAGS = LINKFLAGS)
 
 # defining source files list

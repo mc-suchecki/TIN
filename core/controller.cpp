@@ -5,10 +5,27 @@
 #include "../include/events/consoleEvent.hpp"
 #include "../include/events/connectionEvent.hpp"
 
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
+
 using namespace std;
 
 /** Controller constructor - responsible for creating main objects of the app. */
-Controller::Controller() {
+Controller::Controller(int argc, char * argv[]) {
+  po::options_description poDesc("Allowed options");
+  poDesc.add_options()
+    ("help", "help message")
+    ("port,p", "default port")
+    ("config,c", "configuration file")
+    ;
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, poDesc), vm);
+  po::notify(vm);
+  if(vm.count("help")){
+    cout << poDesc << "\n";
+   exit(1); 
+  }
+
   fillEventActionMap();
   eventQueue = new EventQueue();
   console = new Console(eventQueue);
