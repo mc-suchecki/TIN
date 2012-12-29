@@ -17,7 +17,7 @@ void Console::run() {
     history.push_back(line);
     vector<ConsoleEvent*> events = parser->parse(line);
     if(events.size()>0)
-      for(int i = 0; i < events.size(); ++i)
+      for(unsigned int i = 0; i < events.size(); ++i)
         queue->push(events[i]);
 
     sleep(1);

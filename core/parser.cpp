@@ -33,41 +33,41 @@ vector<ConsoleEvent*> Parser::parse(string input){
       input.begin(), input.end(), 
       (
        (
-        lit("connect")[ref(action) = "connect"]
+        lit("connect")[phoenix::ref(action) = "connect"]
         >> " "
-        >> qi::as_string[+(qi::char_ - " " - ",")][push_back(ref(addresses), _1)]
+        >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(addresses), _1)]
         >> *(
           ", "
-          >> qi::as_string[+(qi::char_ - " " - ",")][push_back(ref(addresses),_1)]
+          >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(addresses),_1)]
           )
         >> *(" " >>
-          (qi::int_)[ref(port) = _1])
+          (qi::int_)[phoenix::ref(port) = _1])
        )
        | (
-         lit("send")[ref(action) = "send"]
+         lit("send")[phoenix::ref(action) = "send"]
          >> " "
-         >> qi::as_string[+(qi::char_ - " " - ",")][push_back(ref(addresses),_1)]
+         >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(addresses),_1)]
          >> *(
            ", "
-           >> qi::as_string[+(qi::char_ - " " - ",")][push_back(ref(addresses),_1)]
+           >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(addresses),_1)]
            )
          >> " "
-         >> qi::as_string[+(qi::char_ - " ")][ref(command) = _1]
+         >> qi::as_string[+(qi::char_ - " ")][phoenix::ref(command) = _1]
          )
        | (
          lit("disconnect")
          )
        | (
-         lit("sendf")[ref(action) = "sendf"]
+         lit("sendf")[phoenix::ref(action) = "sendf"]
          >> " "
-         >> qi::as_string[+(qi::char_ - " " - ",")][push_back(ref(addresses),_1)]
+         >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(addresses),_1)]
          >> *(
            ", "
-           >> qi::as_string[+(qi::char_ - " " - ",")][push_back(ref(addresses),_1)]
+           >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(addresses),_1)]
            )
            >> *(
              " "
-             >> qi::as_string[+(qi::char_ - " ")][push_back(ref(files), _1)]
+             >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(files), _1)]
              )
          )
        )

@@ -22,12 +22,10 @@ class CreateConnectionEvent : public ConsoleEvent {
       : address(address), port(port) {};
     virtual ~CreateConnectionEvent() {};
     virtual std::string getMessage() {
-      std::stringstream out;
-      out << port;
       if(port == 0)
         return "Connect to " + address + " on default port.";
       else
-        return "Connect to " + address + " on port " + out.str() + ".";
+        return "Connect to " + address + " on port " + std::to_string(port) + ".";
     }
 
     std::string getAddress() {return address;};

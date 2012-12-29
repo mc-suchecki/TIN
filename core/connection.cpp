@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include "../include/logger.hpp"
 #include "../include/connection.hpp"
 #include "../include/eventQueue.hpp"
 #include "../include/events/connectionEvent.hpp"
@@ -17,7 +18,8 @@ using namespace std;
 
 Connection::Connection(EventQueue * const evQ, IPAddress addr, PortsNr p):
   eventQueue(evQ), IP_ADDRESS(addr), PORTS_NUMBER(p){
-
+  Logger * logger = Logger::getInstance(cout);
+  logger->debug("Created new connection object with address "+addr+" and port "+std::to_string(p));
   stopLoop = false;
   runThread = boost::thread(&Connection::run, this);
   sockfd = -1;

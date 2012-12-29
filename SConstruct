@@ -1,5 +1,5 @@
 # configuring environment
-CCFLAGS = '-Wall -pedantic'
+CCFLAGS = '-Wall -pedantic -std=c++0x'
 LINKFLAGS = '-lboost_thread -lboost_system -lboost_program_options'
 env = Environment(CCFLAGS = CCFLAGS, LINKFLAGS = LINKFLAGS)
 

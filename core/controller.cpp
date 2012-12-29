@@ -6,6 +6,7 @@
 #include "../include/events/consoleEvent.hpp"
 #include "../include/events/connectionEvent.hpp"
 
+#include <fstream>
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
@@ -14,23 +15,60 @@ using namespace std;
 /** Controller constructor - responsible for creating main objects of the app. */
 Controller::Controller(int argc, char * argv[]) {
   config = Config::getInstance();
+  if(!handleConfig(argc, argv)){
+    exit(1);
+  }
+
+  // initialize the application
+  fillEventActionMap();
+  eventQueue = new EventQueue();
+  console = new Console(eventQueue);
+  boost::thread consoleThread = boost::thread(&Console::run, console);
+  logger = Logger::getInstance(cout);
+}
+
+/** Responsible for handling command line arguments and a config file */
+bool Controller::handleConfig(int argc, char * argv[]){
   try{
-  po::options_description poDesc("Allowed options");
-  poDesc.add_options()
-    ("help", "help message")
-    ("port,p", po::value<int>(), "default port")
-    ("config,c", "configuration file")
-    ;
-  po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, poDesc), vm);
-  po::notify(vm);
-  if(vm.count("help")){
-    cout << poDesc << "\n";
-   exit(1); 
-  }
-  if(vm.count("port")){
-    config->setPort(vm["port"].as<int>());
-  }
+    po::options_description genericOptions("Generic options");
+    genericOptions.add_options()
+      ("help", "help message")
+      ("version", "version")
+      ;
+    po::options_description configOptions("Configuration");
+    configOptions.add_options()
+      ("port,p", po::value<int>(), "default port")
+      ("config,c", "configuration file")
+      ("debug,d", po::value<int>(), "debug level: 0 - none, 1 - events, 2 - all")
+      ;
+
+    po::options_description cmdLineOptions;
+    cmdLineOptions.add(genericOptions).add(configOptions);
+
+    po::options_description cfgFileOptions;
+    cfgFileOptions.add(configOptions);
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, cmdLineOptions), vm);
+
+    ifstream ifs("./test/test.cfg"); // TODO add custom config files
+    po::store(po::parse_config_file(ifs, cfgFileOptions), vm);
+
+    po::notify(vm);
+    if(vm.count("help")){
+      cout << cmdLineOptions << endl;
+      return false;
+    }
+    if(vm.count("version")){
+      cout << "Version: "<< endl;
+      return false;
+    }
+    if(vm.count("port")){
+      config->setPort(vm["port"].as<int>());
+    }
+    if(vm.count("debug")){
+      config->setDebug(vm["debug"].as<int>());
+    }
   }
   catch(exception& e){
     cout<<"error: "<<e.what() << endl;
@@ -38,12 +76,7 @@ Controller::Controller(int argc, char * argv[]) {
   catch(...){
     cout<<"exception of unknown type"<<endl;
   }
-
-  fillEventActionMap();
-  eventQueue = new EventQueue();
-  console = new Console(eventQueue);
-  boost::thread consoleThread = boost::thread(&Console::run, console);
-  logger = new Logger(cout);
+  return true;
 }
 
 /** Method responsible for running constantly and processing events. */

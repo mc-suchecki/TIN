@@ -33,6 +33,9 @@ class Controller {
     //vector of active connections
     std::vector<Connection *> activeConnections;
 
+    //configuration handling
+    bool handleConfig(int argc, char * argv[]);
+
     //map converting Event types to actions handling them
     std::map<const std::type_info *, MethodPointer> eventActionMap;
     void fillEventActionMap();

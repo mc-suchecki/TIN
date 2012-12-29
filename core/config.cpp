@@ -1,12 +1,20 @@
 #include "../include/config.hpp"
-#include <cstddef> //get NULL working
 
-Config * Config::instance = NULL;
+/// instance variable
+Config * Config::instance = nullptr;
 
+/// singleton
 Config * Config::getInstance(){
-  if(instance == NULL){
+  if(instance == nullptr){
     instance = new Config();
   }
 return instance;
+}
+
+/// constructor with default values
+Config::Config(){
+  // put default values here
+  port = 777;
+  debug = 0;
 }
 
