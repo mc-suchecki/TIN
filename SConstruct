@@ -7,6 +7,7 @@ env = Environment(CCFLAGS = CCFLAGS, LINKFLAGS = LINKFLAGS)
 main = [ 'main.cpp' ]
 core = [
   'core/controller.cpp',
+  'core/config.cpp',
   'core/eventQueue.cpp',
   'core/console.cpp',
   'core/parser.cpp',

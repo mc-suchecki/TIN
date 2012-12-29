@@ -1,4 +1,5 @@
 #include "../include/controller.hpp"
+#include "../include/config.hpp"
 #include "../include/eventQueue.hpp"
 #include "../include/console.hpp"
 
@@ -12,10 +13,12 @@ using namespace std;
 
 /** Controller constructor - responsible for creating main objects of the app. */
 Controller::Controller(int argc, char * argv[]) {
+  config = Config::getInstance();
+  try{
   po::options_description poDesc("Allowed options");
   poDesc.add_options()
     ("help", "help message")
-    ("port,p", "default port")
+    ("port,p", po::value<int>(), "default port")
     ("config,c", "configuration file")
     ;
   po::variables_map vm;
@@ -24,6 +27,16 @@ Controller::Controller(int argc, char * argv[]) {
   if(vm.count("help")){
     cout << poDesc << "\n";
    exit(1); 
+  }
+  if(vm.count("port")){
+    config->setPort(vm["port"].as<int>());
+  }
+  }
+  catch(exception& e){
+    cout<<"error: "<<e.what() << endl;
+  }
+  catch(...){
+    cout<<"exception of unknown type"<<endl;
   }
 
   fillEventActionMap();
@@ -96,8 +109,12 @@ void Controller::fillEventActionMap() {
 void Controller::createConnection(Event *event) {
   CreateConnectionEvent *createConnectionEvent =
     dynamic_cast<CreateConnectionEvent *>(event);
+  int port = createConnectionEvent->getPort();
+  if(port == 0)
+    port = config->getPort();
+
   Connection *newConnection =
-    new Connection(eventQueue, createConnectionEvent->getAddress(), 100);
+    new Connection(eventQueue, createConnectionEvent->getAddress(), port);
   newConnection->init();
   activeConnections.push_back(newConnection);
   logger->logEvent(createConnectionEvent);

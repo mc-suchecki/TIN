@@ -6,6 +6,8 @@
 #include "logger.hpp"
 #include <map>
 
+class Config;
+
 /**
  * Application controller from MVC pattern - responsible for 
  * proccessing events from EventsQueue class coordinating the
@@ -26,6 +28,7 @@ class Controller {
     EventQueue *eventQueue;
     Console *console;
     Logger *logger;
+    Config *config;
 
     //vector of active connections
     std::vector<Connection *> activeConnections;
