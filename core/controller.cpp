@@ -142,6 +142,9 @@ void Controller::fillEventActionMap() {
 void Controller::createConnection(Event *event) {
   CreateConnectionEvent *createConnectionEvent =
     dynamic_cast<CreateConnectionEvent *>(event);
+
+  logger->logEvent(createConnectionEvent);
+
   int port = createConnectionEvent->getPort();
   if(port == 0)
     port = config->getPort();
@@ -150,7 +153,6 @@ void Controller::createConnection(Event *event) {
     new Connection(eventQueue, createConnectionEvent->getAddress(), port);
   newConnection->init();
   activeConnections.push_back(newConnection);
-  logger->logEvent(createConnectionEvent);
 }
 
 /** Method responsible for sending command to one of the servers using Connection. */
