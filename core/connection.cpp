@@ -5,6 +5,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <boost/thread.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -58,7 +59,7 @@ void Connection::init_internal() {
   }
 
   struct sockaddr_in servAddr;
-  memset(&servAddr, 0, sizeof(servAddr)); //TODO replace with generic fill()
+  memset(&servAddr, 0, sizeof(servAddr));
   servAddr.sin_family = AF_INET;
   servAddr.sin_port = htons(PORTS_NUMBER);
 
@@ -82,43 +83,56 @@ void Connection::killAll_internal() {
 }
 
 void Connection::execute_internal(const Command &command) {
-  if(sockfd < 0)
+  if(sockfd < 0){
     cerr<< "(" << IP_ADDRESS << ") Cannot execute command on uninitialized connection" << endl;
-
-  strncpy(buffer, command.serialize(), 256);
-  int n = write(sockfd, buffer, strlen(buffer));
-  if(n < 0) {
-    string errMsg = "(" + IP_ADDRESS + ") Failed to write to socket";
-    eventQueue->push(new CommandSendingFailedEvent(errMsg));
-    cerr << errMsg << endl;
     return;
   }
 
+  // sending command
+  char *serializedChunk;
+  unsigned sizeOfChunk;
+  do {
+    sizeOfChunk = command.serialize(serializedChunk);
+
+    strncpy(buffer, serializedChunk, BUFFER_SIZE-1); 
+    int n = write(sockfd, buffer, strlen(buffer));
+
+    if(n < 0) {
+      string errMsg = "(" + IP_ADDRESS + ") Failed to write to socket";
+      eventQueue->push(new CommandSendingFailedEvent(errMsg));
+      cerr << errMsg << endl;
+      return;
+    }
+
+  } while(sizeOfChunk == BUFFER_SIZE);
+
   eventQueue->push(new CommandSentEvent()); 
-  //std::cout << "Command sent" << std::endl;
 
   memset(buffer,0,256);
-  n = read(sockfd, buffer, 255);
-  //std::cout << "server: started execution of tasks" << std::endl;
+  int n = read(sockfd, buffer, 255);
+  cout<<buffer<<endl;
+  // TODO
+  // 1. Open a file of name IP_ADDRESS_numOfResults.
+  // 2. Read in loop data and write them into file.
+  // 3. If there is no more data, close the file.
+  // 4. Increment thre numOfResults.
+
   if(n<0) {
     string errorMsg = "(" + IP_ADDRESS + ") Couldn't read data from socket";
     eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
     cerr << errorMsg << std::endl;
     return;
   }
-
-  cout << buffer << endl;
-  //TODO put read data into eventQueue
 }
 
 std::string Connection::getIPAddress() {
   return IP_ADDRESS;
 }
 
-const char * Command::serialize() const{
-  char *serializedContent = new char[command.size()+1];
-  strcpy(serializedContent,command.c_str());
+unsigned int Command::serialize(char *&serializedChunk_out) const {
+  serializedChunk_out = new char[command.size()+1];
+  strcpy(serializedChunk_out,command.c_str());
 
-  return serializedContent;
+  return command.size()+1;
 }
 

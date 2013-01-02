@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
 #include "Server.h"
 
@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 {
      if (argc < 2)
      {
-         fprintf(stderr,"ERROR, no port provided\n");
+         std::cerr << "ERROR, no port provided" << std::endl;
          exit(1);
      }
 
