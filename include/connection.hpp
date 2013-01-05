@@ -26,17 +26,19 @@ const unsigned int BUFFER_SIZE = 256;
 
 class Command {
   public:
-    Command(const std::string &cmd): command(cmd) {}
+    enum Type {
+      COMMAND = 0x01,
+      KILL_ALL = 0x02
+    };
 
-    /// @return true if there is more data to be serialized (given chunk of data is not the last one)
+    Command(const std::string &cmd, enum Type t=Command::COMMAND):
+      type(t), command(cmd) {}
+
     virtual unsigned int serialize(char *&serilizedChunk_out) const;
     virtual ~Command() {};
 
   protected:
-    enum Type {
-      COMMAND = 0x01,
-      KILL_ALL = 0x02
-    } type;
+    Type type;
 
   private:
     const std::string command;
@@ -82,6 +84,8 @@ class Connection {
     void init_internal();
     void execute_internal(const Command &command);
     void killAll_internal();
+
+    bool sendCommand(const Command &command);
 
     //internal classes representing actions (design pattern: command)
     class Action {
