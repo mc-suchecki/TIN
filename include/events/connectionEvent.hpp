@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <boost/filesystem/path.hpp>
 #include "event.hpp"
 
 class ConnectionEvent : public Event {
@@ -40,12 +41,12 @@ class CommandSendingFailedEvent: public ConnectionEvent {
 
 class ActionDoneEvent : public ConnectionEvent {
   public:
-    ActionDoneEvent(void *results):
-      ConnectionEvent("All commands completed."), results(results) {};
+    ActionDoneEvent(boost::filesystem::path res):
+      ConnectionEvent("All commands completed."), results(res) {};
     virtual ~ActionDoneEvent() {};
-    void * getResults() {return results;};
+    boost::filesystem::path getResults() {return results;};
   private:
-    void *results; //FIXME change it to file's path or sth
+    boost::filesystem::path results;
 };
 
 class ReceivingResultsFailureEvent: public ConnectionEvent {

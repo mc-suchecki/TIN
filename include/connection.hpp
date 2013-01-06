@@ -8,6 +8,8 @@
 
 #include <string>
 #include <map>
+#include <boost/asio.hpp>
+
 #include "eventQueue.hpp"
 #include "blockingQueue.hpp"
 
@@ -20,26 +22,23 @@ typedef unsigned short PortsNr;
  * commands and receiving results of their execution. Every instance of that
  * class represents a separate Server.
  */
+const unsigned int BUFFER_SIZE = 256;
 
-class Message {
+class Command {
   public:
-    virtual const char * serialize() const = 0;
-    virtual ~Message() {};
-
-  protected:
     enum Type {
       COMMAND = 0x01,
       KILL_ALL = 0x02
-    } type;
-};
+    };
 
-class Command: public Message {
-  public:
-    Command(const std::string &cmd): command(cmd) {
-      type = COMMAND;
-    }
-    virtual ~Command() {}
-    virtual const char * serialize() const;
+    Command(const std::string &cmd, enum Type t=Command::COMMAND):
+      type(t), command(cmd) {}
+
+    virtual unsigned int serialize(char *&serilizedChunk_out) const;
+    virtual ~Command() {};
+
+  protected:
+    Type type;
 
   private:
     const std::string command;
@@ -67,13 +66,17 @@ class Connection {
 
     EventQueue * const eventQueue;
     BlockingQueue<Action> actionsQueue;
+    volatile bool stopLoop;
 
+    ////////////////////////////////////////
     const IPAddress IP_ADDRESS;
     const PortsNr PORTS_NUMBER;  
-    char buffer[256];
+    boost::asio::ip::tcp::iostream remoteConnection;
     int sockfd;
+    char buffer[BUFFER_SIZE];
 
-    volatile bool stopLoop;
+    int numOfResults;
+
     void run();
     char* serialize(const std::string &command);
 
@@ -82,7 +85,9 @@ class Connection {
     void execute_internal(const Command &command);
     void killAll_internal();
 
-    //internal classes
+    bool sendCommand(const Command &command);
+
+    //internal classes representing actions (design pattern: command)
     class Action {
       public:
         Action(Connection *conn): connection(conn){}

@@ -1,9 +1,15 @@
+<<<<<<< HEAD
 /*
  * ConnectionHandler.cpp
  *
  *  Created on: 26-12-2012
  *      Author: przemek
  */
+=======
+#include <iostream>
+#include "ConnectionHandler.h"
+//#include <boost/thread.hpp>
+>>>>>>> upstream/master
 
 #include "ConnectionHandler.hpp"
 #include <fstream>
@@ -21,6 +27,7 @@ ConnectionHandler::ConnectionHandler(int port,
 
 void ConnectionHandler::initializeMySocket()
 {
+<<<<<<< HEAD
 	mySocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (mySocket < 0)
 		error("ERROR opening socket");
@@ -30,33 +37,85 @@ void ConnectionHandler::initializeMySocket()
 	serverAddress.sin_port = htons(portNumber);
 	if (bind(mySocket, (struct sockaddr *) &serverAddress, sizeof(serverAddress)) < 0)
 		error("ERROR on binding");
+=======
+  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  if (sockfd < 0)
+    error("ERROR opening socket");
+  bzero((char *) &servAddr, sizeof(servAddr));
+
+  portno = port;
+
+  servAddr.sin_family = AF_INET;
+  servAddr.sin_addr.s_addr = INADDR_ANY;
+  servAddr.sin_port = htons(portno);
+  if (bind(sockfd, (struct sockaddr *) &servAddr, sizeof(servAddr)) < 0)
+    error("ERROR on binding");
+>>>>>>> upstream/master
 }
 
 ConnectionHandler::~ConnectionHandler()
 {
+<<<<<<< HEAD
     close(mySocket);
+=======
+  close(sockfd);
+>>>>>>> upstream/master
 }
 
 void ConnectionHandler::start()
 {
+<<<<<<< HEAD
     connectionHandler = boost::thread(&ConnectionHandler::watchForClientRequests, this);
+=======
+  startCommunication();
+  //communicationHandler = boost::thread(&ConnectionHandler::StartCommunication, this);
+>>>>>>> upstream/master
 }
 
 void ConnectionHandler::join()
 {
+<<<<<<< HEAD
     connectionHandler.join();
+=======
+  //communicationHandler.join();
+>>>>>>> upstream/master
 }
 
 //i assume, that only one command is received before it's results are sent back
 void ConnectionHandler::watchForClientRequests()
 {
+<<<<<<< HEAD
     while(true)
     {
     	initializeConnection();
     	receiveMessage();
     	sendResults();
     	closeConnection();
+=======
+  int n;
+  while(true) {
+    listen(sockfd,5);
+    clilen = sizeof(cliAddr);
+    newsockfd = accept(sockfd, (struct sockaddr *) &cliAddr, &clilen);
+    if (newsockfd < 0)
+      error("ERROR on accept");
+
+    bzero(buffer,256);
+    while((n = read(newsockfd,buffer,255)))
+    {
+      if(n < 0)
+        error("ERROR reading from socket");
+
+      std::cout << "Here is the message:" << buffer << std::endl;
+      n = write(newsockfd,"I got your message",18);
+
+      if(n < 0)
+        error("ERROR writing to socket");
+      bzero(buffer,256);
+>>>>>>> upstream/master
     }
+    close(newsockfd);
+  }
 }
 
 void ConnectionHandler::initializeConnection()
@@ -150,6 +209,6 @@ void ConnectionHandler::setClientIP()
 
 void ConnectionHandler::error(const char* message)
 {
-    perror(message);
-    exit(1);
+  std::cerr << message << std::endl; 
+  exit(1);
 }

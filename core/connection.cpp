@@ -1,14 +1,18 @@
 /// @author Jacek Witkowski
 ///
-/// @brief Implementation of the Connection class.
+/// Implementation of the Connection class.
 
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
+
 #include <boost/thread.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
 #include "../include/logger.hpp"
 #include "../include/connection.hpp"
 #include "../include/eventQueue.hpp"
@@ -18,12 +22,12 @@ using namespace std;
 
 Connection::Connection(EventQueue * const evQ, IPAddress addr, PortsNr p):
   eventQueue(evQ), IP_ADDRESS(addr), PORTS_NUMBER(p){
-  Logger * logger = Logger::getInstance(cout);
-  logger->debug("Created new connection object with address "+addr+" and port "+std::to_string(p));
-  stopLoop = false;
-  runThread = boost::thread(&Connection::run, this);
-  sockfd = -1;
-}
+    Logger * logger = Logger::getInstance(cout);
+    logger->debug("Created new connection object with address "+addr+" and port "+std::to_string(p));
+    stopLoop = false;
+    runThread = boost::thread(&Connection::run, this);
+    sockfd = -1;
+  }
 
 Connection::~Connection() {
   stopLoop = true;
@@ -32,9 +36,9 @@ Connection::~Connection() {
 
 void Connection::run() {
   while(!stopLoop){
-     Action *action = actionsQueue.pop();
-     action->execute();
-     delete action;
+    Action *action = actionsQueue.pop();
+    action->execute();
+    delete action;
   }
 }
 
@@ -58,7 +62,7 @@ void Connection::init_internal() {
   }
 
   struct sockaddr_in servAddr;
-  memset(&servAddr, 0, sizeof(servAddr)); //TODO replace with generic fill()
+  memset(&servAddr, 0, sizeof(servAddr));
   servAddr.sin_family = AF_INET;
   servAddr.sin_port = htons(PORTS_NUMBER);
 
@@ -78,47 +82,87 @@ void Connection::init_internal() {
 }
 
 void Connection::killAll_internal() {
-  //TODO  
+  Command cmd("Sudden Death!", Command::KILL_ALL);
+  execute_internal(cmd);
 }
 
 void Connection::execute_internal(const Command &command) {
-  if(sockfd < 0)
+  if(sockfd < 0){
     cerr<< "(" << IP_ADDRESS << ") Cannot execute command on uninitialized connection" << endl;
-
-  strncpy(buffer, command.serialize(), 256);
-  int n = write(sockfd, buffer, strlen(buffer));
-  if(n < 0) {
-    string errMsg = "(" + IP_ADDRESS + ") Failed to write to socket";
-    eventQueue->push(new CommandSendingFailedEvent(errMsg));
-    cerr << errMsg << endl;
     return;
   }
 
-  eventQueue->push(new CommandSentEvent()); 
-  //std::cout << "Command sent" << std::endl;
+  // sending command
+  if(!sendCommand(command))
+    return;
 
-  memset(buffer,0,256);
-  n = read(sockfd, buffer, 255);
-  //std::cout << "server: started execution of tasks" << std::endl;
+
+  // open a file of name IP_ADDRESS_numOfResults.
+  ofstream resultFile;
+  string filename = IP_ADDRESS+"_"+boost::lexical_cast<string>(numOfResults);
+  char * filename_cstr = new char[filename.size()+1]; 
+  strncpy(filename_cstr, filename.c_str(), filename.size());
+  resultFile.open(filename_cstr);
+
+  // read in loop data and write them into file.
+  int n;
+  do{
+    memset(buffer,0,BUFFER_SIZE);
+    n = read(sockfd, buffer, BUFFER_SIZE-1);
+    if(n<0)
+      break; 
+
+    resultFile.write(buffer, n);
+    if(resultFile.fail()){
+      cerr<<"Error while writing to the file"<<endl;
+      n = -1;
+    }
+
+    cout.write(buffer,n);
+  }
+  while(false);//FIXME How can I recognize the end of the transmission?
+
   if(n<0) {
-    string errorMsg = "(" + IP_ADDRESS + ") Couldn't read data from socket";
+    string errorMsg = "(" + IP_ADDRESS + ") Failed to receive the result file";
     eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
     cerr << errorMsg << std::endl;
-    return;
+  }
+  else {
+    ++numOfResults;
+    cout << "Results received successfully" << std::endl;
+    eventQueue->push(new ActionDoneEvent(filename));
   }
 
-  cout << buffer << endl;
-  //TODO put read data into eventQueue
+  resultFile.close(); 
+  delete filename_cstr;
 }
 
 std::string Connection::getIPAddress() {
   return IP_ADDRESS;
 }
 
-const char * Command::serialize() const{
-  char *serializedContent = new char[command.size()+1];
-  strcpy(serializedContent,command.c_str());
+unsigned int Command::serialize(char *&serializedChunk_out) const {
+  serializedChunk_out = new char[command.size()+1];
+  strcpy(serializedChunk_out,command.c_str());
 
-  return serializedContent;
+  return command.size()+1;
+}
+
+bool Connection::sendCommand(const Command &command) {
+  char *serializedChunk;
+  unsigned sizeOfChunk = command.serialize(serializedChunk);
+
+  strncpy(buffer, serializedChunk, BUFFER_SIZE); 
+  int n = write(sockfd, buffer, strlen(buffer));
+
+  if(n < 0) {
+    string errMsg = "(" + IP_ADDRESS + ") Failed to write to socket";
+    eventQueue->push(new CommandSendingFailedEvent(errMsg));
+    cerr << errMsg << endl;
+    return false;
+  }
+
+  eventQueue->push(new CommandSentEvent());
+  return true;
 }
 
