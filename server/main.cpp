@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 /*
  * main.cpp
  *
@@ -7,9 +6,6 @@
  */
 
 #include <stdio.h>
-=======
-#include <iostream>
->>>>>>> upstream/master
 #include <stdlib.h>
 #include "Server.hpp"
 
@@ -19,7 +15,7 @@ int main(int argc, char *argv[])
 {
      if (argc < 2)
      {
-         std::cerr << "ERROR, no port provided" << std::endl;
+         fprintf(stderr,"ERROR, no port provided\n");
          exit(1);
      }
 
