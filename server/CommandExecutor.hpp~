@@ -14,7 +14,7 @@ class CommandExecutor
 {
 	public:
 		CommandExecutor(BlockingQueue<std::string/*Command*/> * commandQueue,
-				BlockingQueue<std::string> * resultFileQueue);
+				  	    BlockingQueue<std::string> * resultFileQueue);
 		virtual ~CommandExecutor() {}
 		void start();
 		void join();

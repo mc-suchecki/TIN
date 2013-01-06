@@ -23,8 +23,8 @@ class ConnectionHandler
 {
     public:
         ConnectionHandler(int port,
-			  BlockingQueue<std::string/*Command*/> * commandQueue,
-			  BlockingQueue<std::string> * resultFileQueue);
+        				  BlockingQueue<std::string/*Command*/> * commandQueue,
+        				  BlockingQueue<std::string> * resultFileQueue);
         virtual ~ConnectionHandler();
         void start();
         void join();

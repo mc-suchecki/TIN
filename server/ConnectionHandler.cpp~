@@ -134,7 +134,7 @@ void ConnectionHandler::closeConnection()
 {
 	close(outputSocket);
 	std::cout << "[ConnectionHandler] Connection closed: "
-		  << clientIP << std::endl << std::endl;
+			  << clientIP << std::endl << std::endl;
 }
 
 void ConnectionHandler::setClientIP()

@@ -13,22 +13,19 @@ Server::Server(int port)
 	commandQueue = new BlockingQueue<std::string/*Command*/>;
 	resultFileQueue = new BlockingQueue<std::string/*Command*/>;
 
-	connectionHandler = new ConnectionHandler(port,
-											  commandQueue,
-											  resultFileQueue);
-    connectionHandler->start();
+	connectionHandler = new ConnectionHandler(port, commandQueue, resultFileQueue);
+	connectionHandler->start();
 
-    commandExecutor = new CommandExecutor(commandQueue,
-    									  resultFileQueue);
-    commandExecutor->start();
+	commandExecutor = new CommandExecutor(commandQueue, resultFileQueue);
+	commandExecutor->start();
 }
 
 Server::~Server()
 {
-    connectionHandler->join();
-    delete connectionHandler;
+	connectionHandler->join();
+	delete connectionHandler;
 
-    commandExecutor->join();
+	commandExecutor->join();
 	delete commandExecutor;
 
 	delete commandQueue;

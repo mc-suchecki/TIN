@@ -13,10 +13,10 @@
 
 class Server
 {
-    public:
-        Server(int port);
-        virtual ~Server();
-    private:
+	public:
+		Server(int port);
+		virtual ~Server();
+	private:
 		ConnectionHandler *connectionHandler;
 		CommandExecutor * commandExecutor;
 		BlockingQueue<std::string/*Message*/> * commandQueue;
