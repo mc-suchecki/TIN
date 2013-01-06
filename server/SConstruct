@@ -6,6 +6,7 @@ env = Environment(CCFLAGS = CCFLAGS, LINKFLAGS = LINKFLAGS)
 # defining source files list
 main = [ 'main.cpp' ]
 core = [
+  'CommandExecutor.cpp',
   'ConnectionHandler.cpp',
   'Server.cpp'
 ]
