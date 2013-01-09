@@ -150,7 +150,7 @@ unsigned int Command::serialize(char *&serializedChunk_out) const {
 
 bool Connection::sendCommand(const Command &command) {
   char *serializedChunk;
-  unsigned sizeOfChunk = command.serialize(serializedChunk);
+  command.serialize(serializedChunk);
 
   strncpy(buffer, serializedChunk, BUFFER_SIZE); 
   int n = write(sockfd, buffer, strlen(buffer));
