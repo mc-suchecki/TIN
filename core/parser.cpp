@@ -55,7 +55,10 @@ vector<ConsoleEvent*> Parser::parse(string input){
          >> qi::as_string[+(qi::char_)][phoenix::ref(command) = _1]
          )
        | (
-         lit("disconnect")
+         lit("exit")[phoenix::ref(action) = "exit"]
+         )
+       | (
+         lit("help")[phoenix::ref(action) = "help"]
          )
        | (
          lit("sendf")[phoenix::ref(action) = "sendf"]
@@ -100,9 +103,34 @@ vector<ConsoleEvent*> Parser::parse(string input){
         inputFile.close();
       }
     }
+    else if(action == "exit"){
+      exit(0);
+    }
+    else if(action == "help"){
+      cout << "Available commands:" << std::endl;
+      cout << "connect - extablish connection with server" << std::endl;
+      cout << "  examples:" << std::endl;
+      cout << "    command 123.123.123.123 1500" << std::endl;
+      cout << "send - send command to connected server" << std::endl;
+      cout << "  examples:" << std::endl;
+      cout << "    send 123.123.123.123 command_to_execute" << std::endl;
+      cout << "    send 123.123.123.123, 234.234.234.234 command_to_execute" << std::endl;
+      cout << "sendf - send commands from file to connected server" << std::endl;
+      cout << "  examples:" << std::endl;
+      cout << "    sendf 123.123.123.123 ./file/path" << std::endl;
+      cout << "    sendf 123.123.123.123 ./file/path ./file/path2" << std::endl;
+      cout << "    sendf 123.123.123.123, 234.234.234.234 ./file/path" << std::endl;
+      cout << "    sendf 123.123.123.123, 234.234.234.234 ./file/path ./file/path2" << std::endl << std::endl;
+      cout << "  file contents:" << std::endl;
+      cout << "    command to execute 1" << std::endl;
+      cout << "    command to execute 2" << std::endl << std::endl;
+      cout << "help - display this help prompt" << std::endl;
+      cout << "exit - shutdown program" << std::endl;
+    }
+
   }
   else {
-    cout << "Unrecognised command!" << endl;
+    cout << "Unrecognised command! Type \"help\" to display available commands." << endl;
   }
   return retVector;
 }

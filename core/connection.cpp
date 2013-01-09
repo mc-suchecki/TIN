@@ -132,7 +132,6 @@ void Connection::execute_internal(const Command &command) {
   }
   else {
     ++numOfResults;
-    cout << "Results received successfully" << std::endl;
     eventQueue->push(new ActionDoneEvent(filename));
   }
 
@@ -158,7 +157,6 @@ bool Connection::sendCommand(const Command &command) {
 
   strncpy(buffer, serializedChunk, BUFFER_SIZE); 
   int n = write(sockfd, buffer, strlen(buffer));
-  cout << "sendCommand: sent " << n << " bytes of data" <<endl;
 
   if(n < 0) {
     string errMsg = "(" + IP_ADDRESS + ") Failed to write to socket";
