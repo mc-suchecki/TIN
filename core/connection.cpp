@@ -117,10 +117,8 @@ void Connection::execute_internal(const Command &command) {
       cerr<<"Error while writing to the file"<<endl;
       n = -1;
     }
-
-    cout.write(buffer,n);
   }
-  while(false);//FIXME How can I recognize the end of the transmission?
+  while(n);//FIXME How can I recognize the end of the transmission?
 
   if(n<0) {
     string errorMsg = "(" + IP_ADDRESS + ") Failed to receive the result file";
