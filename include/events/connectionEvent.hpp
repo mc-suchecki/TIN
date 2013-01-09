@@ -41,12 +41,9 @@ class CommandSendingFailedEvent: public ConnectionEvent {
 
 class ActionDoneEvent : public ConnectionEvent {
   public:
-    ActionDoneEvent(boost::filesystem::path res):
-      ConnectionEvent("All commands completed."), results(res) {};
+    ActionDoneEvent(const std::string &msg = ""):
+      ConnectionEvent(msg) {}
     virtual ~ActionDoneEvent() {};
-    boost::filesystem::path getResults() {return results;};
-  private:
-    boost::filesystem::path results;
 };
 
 class ReceivingResultsFailureEvent: public ConnectionEvent {

@@ -96,17 +96,22 @@ void Connection::execute_internal(const Command &command) {
   if(!sendCommand(command))
     return;
 
+  //acquire current date and time
+  char timeBuff[80];
+  time_t now = time(0);
+  tm* localtm = localtime(&now);
+  strftime(timeBuff, sizeof(timeBuff), "%Y-%m-%d_%X", localtm);
 
-  // open a file of name IP_ADDRESS_numOfResults.
+  // open a file of name IP_ADDRESS_DATE_TIME
   ofstream resultFile;
-  string filename = IP_ADDRESS+"_"+boost::lexical_cast<string>(numOfResults);
+  string filename = IP_ADDRESS+"_"+timeBuff;
   char * filename_cstr = new char[filename.size()+1]; 
-  strncpy(filename_cstr, filename.c_str(), filename.size());
+  strncpy(filename_cstr, filename.c_str(), filename.size()+1);
   resultFile.open(filename_cstr);
 
   // read in loop data and write them into file.
   int n;
-  do{
+  do {
     memset(buffer,0,BUFFER_SIZE);
     n = read(sockfd, buffer, BUFFER_SIZE-1);
     if(n<0)
@@ -149,9 +154,11 @@ unsigned int Command::serialize(char *&serializedChunk_out) const {
 bool Connection::sendCommand(const Command &command) {
   char *serializedChunk;
   command.serialize(serializedChunk);
+  string commandsContent(serializedChunk);
 
   strncpy(buffer, serializedChunk, BUFFER_SIZE); 
   int n = write(sockfd, buffer, strlen(buffer));
+  cout << "sendCommand: sent " << n << " bytes of data" <<endl;
 
   if(n < 0) {
     string errMsg = "(" + IP_ADDRESS + ") Failed to write to socket";

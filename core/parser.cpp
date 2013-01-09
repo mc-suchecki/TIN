@@ -52,7 +52,7 @@ vector<ConsoleEvent*> Parser::parse(string input){
            >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(addresses),_1)]
            )
          >> " "
-         >> qi::as_string[+(qi::char_ - " ")][phoenix::ref(command) = _1]
+         >> qi::as_string[+(qi::char_)][phoenix::ref(command) = _1]
          )
        | (
          lit("disconnect")

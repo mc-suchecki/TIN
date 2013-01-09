@@ -110,9 +110,11 @@ void Controller::fillEventActionMap() {
   CreateConnectionEvent createConnectionEvent;
   eventActionMap.insert(std::make_pair(&typeid(createConnectionEvent),
         &Controller::createConnection));
+
   SendCommandEvent sendCommandEvent;
   eventActionMap.insert(std::make_pair(&typeid(sendCommandEvent),
         &Controller::sendCommand));
+
   CancelAllEvent cancelAllEvent;
   eventActionMap.insert(std::make_pair(&typeid(cancelAllEvent),
         &Controller::cancelAll));
@@ -121,19 +123,24 @@ void Controller::fillEventActionMap() {
   ConnectionEstablishedEvent connectionEstablishedEvent;
   eventActionMap.insert(std::make_pair(&typeid(connectionEstablishedEvent),
         &Controller::logMessage));
+
   ConnectionFailedEvent connectionFailedEvent;
   eventActionMap.insert(std::make_pair(&typeid(connectionFailedEvent),
         &Controller::logMessage));
+
   CommandSentEvent commandSentEvent;
   eventActionMap.insert(std::make_pair(&typeid(commandSentEvent),
         &Controller::logMessage));
-  CommandSendingFailedEvent commandSendingFailedEvent();
+
+  CommandSendingFailedEvent commandSendingFailedEvent;
   eventActionMap.insert(std::make_pair(&typeid(commandSendingFailedEvent),
         &Controller::logMessage));
-  ActionDoneEvent actionDoneEvent();
+
+  ActionDoneEvent actionDoneEvent;
   eventActionMap.insert(std::make_pair(&typeid(actionDoneEvent),
-        &Controller::saveResults));
-  ReceivingResultsFailureEvent receivingResultsFailureEvent();
+        &Controller::logMessage));
+
+  ReceivingResultsFailureEvent receivingResultsFailureEvent;
   eventActionMap.insert(std::make_pair(&typeid(receivingResultsFailureEvent),
         &Controller::logMessage));
 }
