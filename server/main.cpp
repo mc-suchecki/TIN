@@ -1,5 +1,5 @@
 /*
- * @author CHuj
+ * @author Przemek
  */
 
 #include <stdio.h>
