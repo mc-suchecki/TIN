@@ -118,7 +118,7 @@ void Connection::execute_internal(const Command &command) {
       n = -1;
     }
   }
-  while(n);//FIXME How can I recognize the end of the transmission?
+  while(n>0);//FIXME How can I recognize the end of the transmission?
 
   if(n<0) {
     string errorMsg = "(" + IP_ADDRESS + ") Failed to receive the result file";
