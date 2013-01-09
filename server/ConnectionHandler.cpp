@@ -79,7 +79,7 @@ void ConnectionHandler::receiveMessage()
 	int bytesRead = read(outputSocket, buffer, bufferSize);
 	if (bytesRead < 0)
 		error("ERROR reading from socket");
-	std::cout << "[ConnectionHandler] Received command: " << buffer;
+	std::cout << "[ConnectionHandler] Received command: " << buffer << std::endl;
 
 	commandQueue->push(new std::string(buffer));
 	bzero(buffer, bufferSize);

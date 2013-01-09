@@ -35,13 +35,13 @@ void CommandExecutor::watchForCommands()
 
 void CommandExecutor::execute(const std::string/*Command*/ *receivedCommand)
 {
-	std::cout << "[CommandExecutor] Executing command: " << receivedCommand->data();
+	std::cout << "[CommandExecutor] Executing command: " << receivedCommand->data() << std::endl;
 	std::string *resultFilePath = new std::string("testResultFile");
 	std::string command = makeSystemCommand(receivedCommand, resultFilePath);
 
 	system(command.data());
 
-	std::cout << "[CommandExecutor] Command executed: " << receivedCommand->data();
+	std::cout << "[CommandExecutor] Command executed: " << receivedCommand->data() << std::endl;
 	delete receivedCommand;
 	resultFileQueue->push(resultFilePath);
 }
