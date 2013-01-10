@@ -86,6 +86,11 @@ class Connection {
     void killAll_internal();
 
     bool sendCommand(const Command &command);
+    void getCurrTime(char *timeBuff, int n) {
+      time_t now = time(0);
+      tm *localtm = localtime(&now);
+      strftime(timeBuff, n*sizeof(char), "%Y-%m-%d_%X", localtm);
+    };
 
     //internal classes representing actions (design pattern: command)
     class Action {

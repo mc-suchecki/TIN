@@ -43,7 +43,7 @@ void Connection::run() {
 }
 
 void Connection::init() {
-  actionsQueue.push(new InitAction(this));
+  //actionsQueue.push(new InitAction(this));
 }
 
 void Connection::execute(const Command &command) {
@@ -87,6 +87,9 @@ void Connection::killAll_internal() {
 }
 
 void Connection::execute_internal(const Command &command) {
+  //connect to remote server
+  init_internal();
+
   if(sockfd < 0){
     cerr<< "(" << IP_ADDRESS << ") Cannot execute command on uninitialized connection" << endl;
     return;
@@ -98,16 +101,12 @@ void Connection::execute_internal(const Command &command) {
 
   //acquire current date and time
   char timeBuff[80];
-  time_t now = time(0);
-  tm* localtm = localtime(&now);
-  strftime(timeBuff, sizeof(timeBuff), "%Y-%m-%d_%X", localtm);
+  getCurrTime(timeBuff,80);
 
   // open a file of name IP_ADDRESS_DATE_TIME
   ofstream resultFile;
   string filename = IP_ADDRESS+"_"+timeBuff;
-  char * filename_cstr = new char[filename.size()+1]; 
-  strncpy(filename_cstr, filename.c_str(), filename.size()+1);
-  resultFile.open(filename_cstr);
+  resultFile.open(filename.c_str());
 
   // read in loop data and write them into file.
   int n;
@@ -136,7 +135,6 @@ void Connection::execute_internal(const Command &command) {
   }
 
   resultFile.close(); 
-  delete filename_cstr;
 }
 
 std::string Connection::getIPAddress() {
