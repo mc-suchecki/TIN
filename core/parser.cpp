@@ -25,31 +25,39 @@ vector<ConsoleEvent*> Parser::parse(string input){
   vector<ConsoleEvent*> retVector;
   bool result;
   string action;
+  vector<string> command_aliases;
   vector<string> addresses;
   vector<string> files;
+  vector<int> ports;
   string command;
-  int port = 0;
   result = qi::parse(
       input.begin(), input.end(), 
       (
        (
         lit("connect")[phoenix::ref(action) = "connect"]
         >> " "
-        >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(addresses), _1)]
+        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(addresses), _1)]
+        >> " "
+        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(command_aliases),_1)]
+        >> " "
+        >> (qi::int_)[push_back(phoenix::ref(ports), _1)]
         >> *(
           ", "
-          >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(addresses),_1)]
-          )
-        >> *(" " >>
-          (qi::int_)[phoenix::ref(port) = _1])
+        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(addresses), _1)]
+        >> " "
+        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(command_aliases),_1)]
+        >> " "
+        >> (qi::int_)[push_back(phoenix::ref(ports), _1)]
        )
+      )
+      
        | (
          lit("send")[phoenix::ref(action) = "send"]
          >> " "
-         >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(addresses),_1)]
+         >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(command_aliases),_1)]
          >> *(
            ", "
-           >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(addresses),_1)]
+           >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(command_aliases),_1)]
            )
          >> " "
          >> qi::as_string[+(qi::char_)][phoenix::ref(command) = _1]
@@ -78,12 +86,14 @@ vector<ConsoleEvent*> Parser::parse(string input){
 
   if(result){
     if(action == "connect"){
-      for(unsigned int i = 0; i < addresses.size();++i)
-        retVector.push_back(new CreateConnectionEvent(addresses[i], port));
+      for(unsigned int i = 0; i < addresses.size();++i){
+        retVector.push_back(new CreateConnectionEvent(addresses[i], ports[i]));
+        aliases[command_aliases[i]]=addresses[i];
+      }
     }
     else if(action == "send"){
-      for(unsigned int i = 0; i < addresses.size();++i)
-        retVector.push_back(new SendCommandEvent(addresses[i], command));
+      for(unsigned int i = 0; i < command_aliases.size();++i)
+        retVector.push_back(new SendCommandEvent(aliases[command_aliases[i]], command));
     }
     else if(action == "sendf"){
       ifstream inputFile;
@@ -110,11 +120,12 @@ vector<ConsoleEvent*> Parser::parse(string input){
       cout << "Available commands:" << std::endl;
       cout << "connect - extablish connection with server" << std::endl;
       cout << "  examples:" << std::endl;
-      cout << "    command 123.123.123.123 1500" << std::endl;
+      cout << "    connect 123.123.123.123 alias 1500" << std::endl;
+      cout << "    connect 123.123.123.123 alias 1500, 134.134.134.134 alias2 1500" << std::endl;
       cout << "send - send command to connected server" << std::endl;
       cout << "  examples:" << std::endl;
-      cout << "    send 123.123.123.123 command_to_execute" << std::endl;
-      cout << "    send 123.123.123.123, 234.234.234.234 command_to_execute" << std::endl;
+      cout << "    send alias command_to_execute" << std::endl;
+      cout << "    send alias, alias command_to_execute" << std::endl;
       cout << "sendf - send commands from file to connected server" << std::endl;
       cout << "  examples:" << std::endl;
       cout << "    sendf 123.123.123.123 ./file/path" << std::endl;
