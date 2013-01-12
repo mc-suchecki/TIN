@@ -14,22 +14,26 @@ using namespace std;
 
 /** Controller constructor - responsible for creating main objects of the app. */
 Controller::Controller(int argc, char * argv[]) {
+  //handle configuration file nad commandline options
   config = Config::getInstance();
-  if(!handleConfig(argc, argv)){
-    exit(1);
-  }
+  if(!handleConfig(argc, argv)) exit(1);
 
-  // initialize the application
+  //initialize the application
   fillEventActionMap();
   eventQueue = new EventQueue();
   console = new Console(eventQueue);
   boost::thread consoleThread = boost::thread(&Console::run, console);
-  logger = Logger::getInstance(cout);
+
+  //create appropriate logger instance
+  if(config->getLogFile() == "no")
+    logger = new ConsoleLogger(cout);
+  else
+    logger = new FileLogger();
 }
 
 /** Responsible for handling command line arguments and a config file */
 bool Controller::handleConfig(int argc, char * argv[]){
-  try{
+  try {
     po::options_description genericOptions("Generic options");
     genericOptions.add_options()
       ("help", "help message")
@@ -40,6 +44,7 @@ bool Controller::handleConfig(int argc, char * argv[]){
       ("port,p", po::value<int>(), "default port")
       ("config,c", "configuration file")
       ("debug,d", po::value<int>(), "debug level: 0 - none, 1 - events, 2 - all")
+      ("logfile,l", "log file")
       ;
 
     po::options_description cmdLineOptions;
@@ -51,31 +56,36 @@ bool Controller::handleConfig(int argc, char * argv[]){
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, cmdLineOptions), vm);
 
-    ifstream ifs("./test/test.cfg"); // TODO add custom config files
+    ifstream ifs("./settings.cfg"); // TODO add custom config files
     po::store(po::parse_config_file(ifs, cfgFileOptions), vm);
 
     po::notify(vm);
-    if(vm.count("help")){
+
+    if(vm.count("help")) {
       cout << cmdLineOptions << endl;
       return false;
     }
-    if(vm.count("version")){
-      cout << "Version: "<< endl;
+
+    if(vm.count("version")) {
+      cout << "Version: 0.1"<< endl;
       return false;
     }
-    if(vm.count("port")){
+
+    if(vm.count("port"))
       config->setPort(vm["port"].as<int>());
-    }
-    if(vm.count("debug")){
+
+    if(vm.count("debug"))
       config->setDebug(vm["debug"].as<int>());
-    }
+
+    if(vm.count("logfile"))
+      config->setLogFile(vm["logfile"].as<std::string>());
+
+  } catch(exception& e) {
+    cout << "error: " << e.what() << endl;
+  } catch(...) {
+    cout << "exception of unknown type" << endl;
   }
-  catch(exception& e){
-    cout<<"error: "<<e.what() << endl;
-  }
-  catch(...){
-    cout<<"exception of unknown type"<<endl;
-  }
+
   return true;
 }
 
@@ -93,8 +103,7 @@ void Controller::run() {
         requestedAction = eventActionMap[&typeid(*receivedEvent)];
         (this->*requestedAction)(receivedEvent);
       } else {
-        //following code should never be executed - it exists just in case
-        //TODO - remove this after the project is done
+        //following code should never be executed
         cout << "ERROR: Event handler not found for: "
           << typeid(*receivedEvent).name() << endl;
       }
@@ -150,16 +159,17 @@ void Controller::createConnection(Event *event) {
   CreateConnectionEvent *createConnectionEvent =
     dynamic_cast<CreateConnectionEvent *>(event);
 
-  logger->logEvent(createConnectionEvent);
-
+  //acquire appropriate port
   int port = createConnectionEvent->getPort();
-  if(port == 0)
-    port = config->getPort();
+  if(port == 0) port = config->getPort();
 
+  //create connection
   Connection *newConnection =
     new Connection(eventQueue, createConnectionEvent->getAddress(), port);
   newConnection->init();
   activeConnections.push_back(newConnection);
+
+  logger->logEvent(createConnectionEvent);
 }
 
 /** Method responsible for sending command to one of the servers using Connection. */
@@ -167,7 +177,7 @@ void Controller::sendCommand(Event *event) {
   SendCommandEvent *sendCommandEvent = dynamic_cast<SendCommandEvent *>(event);
   vector<Connection *>::iterator it;
 
-  //find Connection with desired ip and send command
+  //find Connection with desired IP and send command
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
     if(sendCommandEvent->getAddress() == (*it)->getIPAddress()) {
       (*it)->execute(sendCommandEvent->getCommand());
@@ -188,7 +198,7 @@ void Controller::cancelAll(Event *event) {
   CancelAllEvent *cancelAllEvent = dynamic_cast<CancelAllEvent *>(event);
   vector<Connection *>::iterator it;
 
-  //find Connection with desired ip and cancel his commands
+  //find Connection with desired IP and cancel his commands
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
     if(cancelAllEvent->getAddress() == (*it)->getIPAddress()) {
       (*it)->killAll();
@@ -209,13 +219,3 @@ void Controller::logMessage(Event *event) {
   ConnectionEvent *connectionEvent = dynamic_cast<ConnectionEvent *>(event);
   logger->logEvent(connectionEvent);
 }
-
-/** Method used to handle ActionDoneEvents - it logs the event and saves the results. */
-void Controller::saveResults(Event *event) {
-  ActionDoneEvent *actionDoneEvent = dynamic_cast<ActionDoneEvent *>(event);
-  //void *results = actionDoneEvent->getResults();
-  //TODO save results to a file
-  //TODO - how to delete results? "delete results" generates warning.
-  logger->logEvent(actionDoneEvent);
-}
-

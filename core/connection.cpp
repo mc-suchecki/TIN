@@ -22,8 +22,8 @@ using namespace std;
 
 Connection::Connection(EventQueue * const evQ, IPAddress addr, PortsNr p):
   eventQueue(evQ), IP_ADDRESS(addr), PORTS_NUMBER(p){
-    Logger * logger = Logger::getInstance(cout);
-    logger->debug("Created new connection object with address "+addr+" and port "+std::to_string(p));
+    //Logger *logger = Logger::getInstance(cout);
+    //logger->logDebugMessage("Created new connection object with address "+addr+" and port "+std::to_string(p));
     stopLoop = false;
     runThread = boost::thread(&Connection::run, this);
     sockfd = -1;

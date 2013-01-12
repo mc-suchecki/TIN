@@ -1,11 +1,14 @@
 #pragma once
 
+#include <string>
+
 /**
- * Responsible for storing config in a simple way (in variables)
+ * Responsible for storing config in a simple way (in variables).
  */
 class Config{
   public:
     //singletonic supersonic
+    //Maciej Suchecki lubi to.
     static Config * getInstance();
 
     // port
@@ -16,6 +19,10 @@ class Config{
     void setDebug(int debug){this->debug = debug;}
     int getDebug(){return debug;}
 
+    // log file
+    void setLogFile(std::string logFile){this->logFile = logFile;}
+    std::string getLogFile(){return logFile;}
+
   private:
     Config();
     Config& operator= (Config&);
@@ -25,7 +32,7 @@ class Config{
     static Config * instance;
 
     int port;
-    //debug level
     int debug;
+    std::string logFile;
 
 };

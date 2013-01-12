@@ -10,7 +10,7 @@ class Config;
 
 /**
  * Application controller from MVC pattern - responsible for 
- * proccessing events from EventsQueue class coordinating the
+ * proccessing events from EventsQueue class and coordinating the
  * communication within the whole application.
  */
 class Controller {
@@ -47,5 +47,4 @@ class Controller {
 
     //methods handling particular connection events
     void logMessage(Event *event);
-    void saveResults(Event *event);
 };
