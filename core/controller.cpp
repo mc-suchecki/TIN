@@ -158,7 +158,7 @@ void Controller::createConnection(Event *event) {
 
   Connection *newConnection =
     new Connection(eventQueue, createConnectionEvent->getAddress(), port);
-  newConnection->init();
+  newConnection->init("admin1"); //FIXME init needs a string with password
   activeConnections.push_back(newConnection);
 }
 
@@ -191,7 +191,7 @@ void Controller::cancelAll(Event *event) {
   //find Connection with desired ip and cancel his commands
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
     if(cancelAllEvent->getAddress() == (*it)->getIPAddress()) {
-      (*it)->killAll();
+      (*it)->close(); //FIXME quickfix: killAll->close; killAll doesn't exist
       logger->logEvent(cancelAllEvent);
       return;
     }

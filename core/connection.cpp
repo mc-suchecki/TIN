@@ -42,35 +42,21 @@ void Connection::run() {
   }
 }
 
-void Connection::init() {
-  //actionsQueue.push(new InitAction(this));
+void Connection::init(string password) {
+  actionsQueue.push(new InitAction(this,password));
 }
 
 void Connection::execute(const Command &command) {
   actionsQueue.push(new ExecuteAction(this,command));
 }
 
-void Connection::killAll() {
-  actionsQueue.push(new KillAllAction(this));
+void Connection::close() {
+  actionsQueue.push(new CloseAction(this));
 }
 
-void Connection::init_internal() {
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if(sockfd < 0) {
-    eventQueue->push(new ConnectionFailedEvent("Failed to open socket"));
+void Connection::init_internal(string password) {
+  if(!prepareSocket())
     return;
-  }
-
-  struct sockaddr_in servAddr;
-  memset(&servAddr, 0, sizeof(servAddr));
-  servAddr.sin_family = AF_INET;
-  servAddr.sin_port = htons(PORTS_NUMBER);
-
-  if(inet_pton(AF_INET, IP_ADDRESS.c_str(), &servAddr.sin_addr)<=0) {
-    string errorMsg = "Failed to convert given IP "+IP_ADDRESS+" address to native type.";
-    eventQueue->push(new ConnectionFailedEvent(errorMsg));
-    return;
-  }
 
   if(connect(sockfd, (struct sockaddr *)&servAddr, sizeof(servAddr)) < 0) {
     string errorMsg = "Failed to connect to remote server";
@@ -78,27 +64,65 @@ void Connection::init_internal() {
     return;
   }
 
-  eventQueue->push(new ConnectionEstablishedEvent());
+  if(sendPassword(password))
+    eventQueue->push(new ConnectionEstablishedEvent());
+
+  else {
+    string errorMsg = "Authentication failure";
+    eventQueue->push(new ConnectionFailedEvent(errorMsg));
+  }
 }
 
-void Connection::killAll_internal() {
-  Command cmd("Sudden Death!", Command::KILL_ALL);
-  execute_internal(cmd);
+void Connection::close_internal() {
+  Command cmd("Sudden Death!", Command::CLOSE);
+
+  if(!sendCommand(cmd))
+    return;
+
+  receiveResults();
 }
 
 void Connection::execute_internal(const Command &command) {
-  //connect to remote server
-  init_internal();
-
   if(sockfd < 0){
     cerr<< "(" << IP_ADDRESS << ") Cannot execute command on uninitialized connection" << endl;
     return;
   }
 
-  // sending command
   if(!sendCommand(command))
     return;
+}
 
+std::string Connection::getIPAddress() {
+  return IP_ADDRESS;
+}
+
+unsigned int Command::serialize(char *&serializedChunk_out) const {
+  serializedChunk_out = new char[command.size()+1];
+  strcpy(serializedChunk_out,command.c_str());
+
+  return command.size()+1;
+}
+
+bool Connection::sendCommand(const Command &command) {
+  char *serializedChunk;
+  command.serialize(serializedChunk);
+  string commandsContent(serializedChunk);
+
+  strncpy(buffer, serializedChunk, BUFFER_SIZE); 
+  int n = write(sockfd, buffer, strlen(buffer));
+
+  if(n < 0) {
+    string errMsg = "(" + IP_ADDRESS + ") Failed to write to socket";
+    eventQueue->push(new CommandSendingFailedEvent(errMsg));
+    cerr << errMsg << endl;
+    return false;
+  }
+
+  eventQueue->push(new CommandSentEvent());
+  return true;
+}
+
+void Connection::receiveResults() {
   //acquire current date and time
   char timeBuff[80];
   getCurrTime(timeBuff,80);
@@ -137,33 +161,41 @@ void Connection::execute_internal(const Command &command) {
   resultFile.close(); 
 }
 
-std::string Connection::getIPAddress() {
-  return IP_ADDRESS;
+bool Connection::sendPassword(string password) {
+  // FIXME md5(password) instead of plain-text password should be sent
+  Command authCmd(password, Command::CLOSE);
+  
+  if(!sendCommand(authCmd))
+    return false;
+
+  //receive authentication response
+  memset(buffer,0,BUFFER_SIZE);
+  int n = read(sockfd, buffer, BUFFER_SIZE-1);
+  if(n<0)
+    return false; 
+
+  if(strcmp(buffer,"ok") == 0)
+    return true;
+
+  return false;
 }
 
-unsigned int Command::serialize(char *&serializedChunk_out) const {
-  serializedChunk_out = new char[command.size()+1];
-  strcpy(serializedChunk_out,command.c_str());
-
-  return command.size()+1;
-}
-
-bool Connection::sendCommand(const Command &command) {
-  char *serializedChunk;
-  command.serialize(serializedChunk);
-  string commandsContent(serializedChunk);
-
-  strncpy(buffer, serializedChunk, BUFFER_SIZE); 
-  int n = write(sockfd, buffer, strlen(buffer));
-
-  if(n < 0) {
-    string errMsg = "(" + IP_ADDRESS + ") Failed to write to socket";
-    eventQueue->push(new CommandSendingFailedEvent(errMsg));
-    cerr << errMsg << endl;
+bool Connection::prepareSocket(){
+  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  if(sockfd < 0) {
+    eventQueue->push(new ConnectionFailedEvent("Failed to open socket"));
     return false;
   }
 
-  eventQueue->push(new CommandSentEvent());
+  memset(&servAddr, 0, sizeof(servAddr));
+  servAddr.sin_family = AF_INET;
+  servAddr.sin_port = htons(PORTS_NUMBER);
+
+  if(inet_pton(AF_INET, IP_ADDRESS.c_str(), &servAddr.sin_addr)<=0) {
+    string errorMsg = "Failed to convert given IP "+IP_ADDRESS+" address to native type.";
+    eventQueue->push(new ConnectionFailedEvent(errorMsg));
+    return false;
+  }
+
   return true;
 }
-

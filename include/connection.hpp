@@ -28,7 +28,7 @@ class Command {
   public:
     enum Type {
       COMMAND = 0x01,
-      KILL_ALL = 0x02
+      CLOSE = 0x02
     };
 
     Command(const std::string &cmd, enum Type t=Command::COMMAND):
@@ -50,15 +50,15 @@ class Connection {
     Connection(EventQueue * const evQ, IPAddress addr, PortsNr p);
     virtual ~Connection();
 
-    void init();
+    void init(std::string password);
     void execute(const Command &command);
-    void killAll();
+    void close();
 
     std::string getIPAddress();
 
   private:
     friend class InitAction;
-    friend class KillAllAction;
+    friend class CloseAction;
     friend class ExecuteAction;
     class Action;
 
@@ -73,6 +73,7 @@ class Connection {
     const PortsNr PORTS_NUMBER;  
     boost::asio::ip::tcp::iostream remoteConnection;
     int sockfd;
+    struct sockaddr_in servAddr;
     char buffer[BUFFER_SIZE];
 
     int numOfResults;
@@ -81,11 +82,15 @@ class Connection {
     char* serialize(const std::string &command);
 
     //internal functions realizing tasks thread unsafely
-    void init_internal();
+    void init_internal(std::string password);
     void execute_internal(const Command &command);
-    void killAll_internal();
+    void close_internal();
 
+    bool prepareSocket();
+    bool sendPassword(std::string password);
     bool sendCommand(const Command &command);
+    void receiveResults();
+
     void getCurrTime(char *timeBuff, int n) {
       time_t now = time(0);
       tm *localtm = localtime(&now);
@@ -104,12 +109,15 @@ class Connection {
 
     class InitAction: public Action {
       public: 
-        InitAction(Connection *conn): Action(conn) {};
+        InitAction(Connection *conn, std::string pwd): Action(conn), password(pwd) {};
         virtual ~InitAction() {};
 
         virtual void execute() {
-          connection->init_internal();
+          connection->init_internal(password);
         }
+
+      private:
+        std::string password;
     };
 
     class ExecuteAction: public Action {
@@ -126,13 +134,13 @@ class Connection {
         Command command;
     };
 
-    class KillAllAction: public Action {
+    class CloseAction: public Action {
       public: 
-        KillAllAction(Connection *conn): Action(conn) {};
-        virtual ~KillAllAction() {};
+        CloseAction(Connection *conn): Action(conn) {};
+        virtual ~CloseAction() {};
 
         virtual void execute() {
-          connection->killAll_internal();
+          connection->close_internal();
         }
     };
 };
