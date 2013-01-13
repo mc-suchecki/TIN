@@ -11,7 +11,8 @@ core = [
   'core/eventQueue.cpp',
   'core/console.cpp',
   'core/parser.cpp',
-  'core/logger.cpp'
+  'core/logger.cpp',
+  'common/MessageDictionary.cpp'
 ]
 
 connection = [

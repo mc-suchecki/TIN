@@ -6,7 +6,7 @@
  */
 
 #include "ConnectionHandler.hpp"
-#include "MessageDictionary.hpp"
+#include "../common/MessageDictionary.hpp"
 #include <fstream>
 
 const std::string ConnectionHandler::password = "password";

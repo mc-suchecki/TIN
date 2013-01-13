@@ -8,7 +8,8 @@ main = [ 'main.cpp' ]
 core = [
   'CommandExecutor.cpp',
   'ConnectionHandler.cpp',
-  'Server.cpp'
+  'Server.cpp',
+  '../common/MessageDictionary.cpp'
 ]
 
 # defining application ingredients
