@@ -6,7 +6,7 @@
  */
 
 #include "CommandExecutor.hpp"
-#include "../common/MessageDictionary.hpp"
+#include "../include/MessageDictionary.hpp"
 #include <fstream>
 
 CommandExecutor::CommandExecutor(BlockingQueue<std::string/*Command*/> * commandQueue,

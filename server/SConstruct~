@@ -11,7 +11,7 @@ core = [
   'CommandExecutor.cpp',
   'ConnectionHandler.cpp',
   'Server.cpp',
-  '../common/MessageDictionary.cpp'
+  'MessageDictionary.cpp'
 ]
 
 # defining application ingredients

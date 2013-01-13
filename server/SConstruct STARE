@@ -1,17 +1,14 @@
 # configuring environment
-env = Environment(
-	CCFLAGS = '-Wall -pedantic',
-	LIBPATH = '/usr/lib',
-	LIBS = ['boost_thread', 'boost_system'],
-)
+CCFLAGS = '-Wall -pedantic'
+LINKFLAGS = '-lboost_thread -lboost_system'
+env = Environment(CCFLAGS = CCFLAGS, LINKFLAGS = LINKFLAGS)
 
 # defining source files list
 main = [ 'main.cpp' ]
 core = [
   'CommandExecutor.cpp',
   'ConnectionHandler.cpp',
-  'Server.cpp',
-  '../common/MessageDictionary.cpp'
+  'Server.cpp'
 ]
 
 # defining application ingredients
