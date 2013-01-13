@@ -17,6 +17,7 @@
 #include "../include/connection.hpp"
 #include "../include/eventQueue.hpp"
 #include "../include/events/connectionEvent.hpp"
+#include "../common/MessageDictionary.hpp"
 
 using namespace std;
 
@@ -75,11 +76,6 @@ void Connection::init_internal(string password) {
 }
 
 void Connection::close_internal() {
-  Command cmd("Sudden Death!", Command::CLOSE);
-
-  if(!sendCommand(cmd))
-    return;
-
   receiveResults();
 }
 
@@ -127,6 +123,7 @@ bool Connection::sendPassword(string password){
   strncpy(buffer, password.c_str(), BUFFER_SIZE); 
   int n = write(sockfd, buffer, strlen(buffer));
 
+  cout<<buffer<<endl;
   if(n < 0) {
     string errorMsg = "(" + IP_ADDRESS + ") Failed to write password to socket";
     eventQueue->push(new ConnectionFailedEvent(errorMsg));
@@ -140,6 +137,10 @@ bool Connection::receiveResults() {
   int numOfFiles = getNumOfResultFiles();
 
   if(numOfFiles<=0)
+    return false;
+
+  Command getFilesCmd(MessageDictionary::sendResultFiles, Command::CLOSE);
+  if(!sendCommand(getFilesCmd))
     return false;
 
   for(int i=0; i<numOfFiles; ++i){
@@ -160,7 +161,8 @@ bool Connection::authenticate(string password) {
   if(n<0)
     return false; 
 
-  if(strcmp(buffer,"ok") == 0)
+  cout<<buffer;
+  if(strcmp(buffer,MessageDictionary::passwordCorrect.c_str()) == 0)
     return true;
 
   return false;
@@ -193,6 +195,10 @@ int Connection::receiveMsg(){
 }
 
 int Connection::getNumOfResultFiles(){
+  Command getFilesNrCmd(MessageDictionary::sendResultFilesNumber, Command::CLOSE);
+  if(!sendCommand(getFilesNrCmd))
+    return -1;
+
   int bytesRead = receiveMsg();
   if(bytesRead <= 0){
     string errorMsg = "(" + IP_ADDRESS + ") Failed to receive number of result files";
@@ -200,6 +206,9 @@ int Connection::getNumOfResultFiles(){
   }
 
   int numOfResFiles = boost::lexical_cast<int>(buffer);
+  cout<<endl<<numOfResFiles<<endl;
+  Command sendFilesCmd(MessageDictionary::sendResultFiles, Command::CLOSE);
+
   return numOfResFiles;
 }
 
