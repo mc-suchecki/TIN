@@ -91,7 +91,7 @@ bool ConnectionHandler::isPasswordCorrect()
 
 bool ConnectionHandler::verifyPasswordAndAnswer(char* readPassword)
 {
-	if( !strcmp(readPassword, password.data()) )
+	if( !strcmp(readPassword, password.c_str()) )
 	{
 		int bytesWritten = write(outputSocket, (void*)MessageDictionary::passwordIncorrect.data(), bufferSize);
 		if (bytesWritten <= 0)
