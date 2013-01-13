@@ -91,7 +91,7 @@ bool ConnectionHandler::isPasswordCorrect()
 
 bool ConnectionHandler::verifyPasswordAndAnswer(char* readPassword)
 {
-	if( !strcmp(readPassword, password.c_str()) )
+	if( !strcmp(readPassword, password.data()) )
 	{
 		int bytesWritten = write(outputSocket, (void*)MessageDictionary::passwordIncorrect.data(), bufferSize);
 		if (bytesWritten <= 0)
@@ -105,7 +105,7 @@ bool ConnectionHandler::verifyPasswordAndAnswer(char* readPassword)
 		if (bytesWritten <= 0)
 			error("ERROR writing to socket");
 		std::cout << "[ConnectionHandler] Client verified" << std::endl;
-		return false;
+		return true;
 	}
 }
 
