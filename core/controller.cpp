@@ -170,7 +170,7 @@ void Controller::createConnection(Event *event) {
   //create connection
   Connection *newConnection =
     new Connection(eventQueue, createConnectionEvent->getAddress(), port);
-  newConnection->init("admin1"); //FIXME init needs a string with password
+  newConnection->init("password"); //FIXME init needs a string with password
   activeConnections.push_back(newConnection);
 
   logger->logEvent(createConnectionEvent);
