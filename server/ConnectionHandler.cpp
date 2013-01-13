@@ -91,7 +91,7 @@ bool ConnectionHandler::isPasswordCorrect()
 
 bool ConnectionHandler::verifyPasswordAndAnswer(char* readPassword)
 {
-	if( !strcmp(readPassword, password.data()) )
+	if( strcmp(readPassword, password.data()) != 0)
 	{
 		int bytesWritten = write(outputSocket, (void*)MessageDictionary::passwordIncorrect.data(), bufferSize);
 		if (bytesWritten <= 0)
@@ -120,7 +120,7 @@ void ConnectionHandler::receiveCommands()
 
 		std::cout << "[ConnectionHandler] Received command: " << buffer;
 		commandQueue->push(new std::string(buffer));
-		if( strcmp(buffer, MessageDictionary::sendResultFilesNumber.data()) )
+		if( strcmp(buffer, MessageDictionary::sendResultFilesNumber.data()) == 0)
 		{
 			bzero(buffer, bufferSize);
 			break;
@@ -158,7 +158,7 @@ void ConnectionHandler::waitForCommand(const std::string &command)
 		if (bytesRead < 0)
 			error("ERROR reading from socket");
 
-		if( strcmp(buffer, command.data()) )
+		if( strcmp(buffer, command.data()) == 0)
 		{
 			std::cout << "[ConnectionHandler] Received command: " << buffer;
 			commandQueue->push(new std::string(buffer));
