@@ -10,8 +10,8 @@
 
 Server::Server(int port)
 {
-	commandQueue = new BlockingQueue<std::string/*Command*/>;
-	resultFileQueue = new BlockingQueue<std::string/*Command*/>;
+	commandQueue = new BlockingQueue<std::string>;
+	resultFileQueue = new BlockingQueue<std::string>;
 
 	connectionHandler = new ConnectionHandler(port, commandQueue, resultFileQueue);
 	connectionHandler->start();

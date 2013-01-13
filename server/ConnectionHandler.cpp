@@ -6,11 +6,14 @@
  */
 
 #include "ConnectionHandler.hpp"
+#include "MessageDictionary.hpp"
 #include <fstream>
 
+const std::string ConnectionHandler::password = "password";
+
 ConnectionHandler::ConnectionHandler(int port,
-				     BlockingQueue<std::string/*Command*/> * commandQueue,
-				     BlockingQueue<std::string> * resultFileQueue)
+		  BlockingQueue<std::string/*Command*/> * commandQueue,
+		  BlockingQueue<std::string> * resultFileQueue)
 {
 	this->commandQueue = commandQueue;
 	this->resultFileQueue = resultFileQueue;
@@ -53,8 +56,11 @@ void ConnectionHandler::watchForClientRequests()
 	while(true)
 	{
 		initializeConnection();
-		receiveMessage();
-		sendResults();
+		if(isPasswordCorrect())
+		{
+			receiveCommands();
+			sendResultFiles();
+		}
 		closeConnection();
 	}
 }
@@ -70,27 +76,103 @@ void ConnectionHandler::initializeConnection()
 	bzero(buffer, bufferSize);
 	setClientIP();
 	std::cout << "[ConnectionHandler] Connection accepted: "
-		  << clientIP << std::endl;
+			  << clientIP << std::endl;
 }
 
-//assuming, that buffer is big enough for whole message
-void ConnectionHandler::receiveMessage()
+bool ConnectionHandler::isPasswordCorrect()
 {
 	int bytesRead = read(outputSocket, buffer, bufferSize);
 	if (bytesRead < 0)
 		error("ERROR reading from socket");
-	std::cout << "[ConnectionHandler] Received command: " << buffer << std::endl;
-
-	commandQueue->push(new std::string(buffer));
+	bool returnValue = verifyPasswordAndAnswer(buffer);
 	bzero(buffer, bufferSize);
-	//sth with pointer, deserialization maybe?
+	return returnValue;
 }
 
-void ConnectionHandler::sendResults()
+bool ConnectionHandler::verifyPasswordAndAnswer(char* readPassword)
 {
-	std::string *resultFilePath = resultFileQueue->pop();
+	if( !strcmp(readPassword, password.data()) )
+	{
+		int bytesWritten = write(outputSocket, (void*)MessageDictionary::passwordIncorrect.data(), bufferSize);
+		if (bytesWritten <= 0)
+			error("ERROR writing to socket");
+		std::cout << "[ConnectionHandler] Unknown client rejected" << std::endl;
+		return false;
+	}
+	else
+	{
+		int bytesWritten = write(outputSocket, (void*)MessageDictionary::passwordIncorrect.data(), bufferSize);
+		if (bytesWritten <= 0)
+			error("ERROR writing to socket");
+		std::cout << "[ConnectionHandler] Client verified" << std::endl;
+		return false;
+	}
+}
+
+//assuming, that buffer is big enough for whole message
+void ConnectionHandler::receiveCommands()
+{
+	while(true)
+	{
+		int bytesRead = read(outputSocket, buffer, bufferSize);
+		if (bytesRead < 0)
+			error("ERROR reading from socket");
+
+		std::cout << "[ConnectionHandler] Received command: " << buffer;
+		commandQueue->push(new std::string(buffer));
+		if( strcmp(buffer, MessageDictionary::sendResultFilesNumber.data()) )
+		{
+			bzero(buffer, bufferSize);
+			break;
+		}
+		bzero(buffer, bufferSize);
+	}
+}
+
+void ConnectionHandler::sendResultFiles()
+{
+	int numberOfFiles = sendNumberOfResultFiles();
+	waitForCommand(MessageDictionary::sendResultFiles);
+	for(int i=0 ; i < numberOfFiles ; i++)
+		sendFile(resultFileQueue->pop());
+	std::cout << "[ConnectionHandler] Sent " << numberOfFiles << " result files" << std::endl;
+}
+
+int ConnectionHandler::sendNumberOfResultFiles()
+{
+	std::string *numberOfResultFiles = resultFileQueue->pop();
+	int numberOfFiles = atoi(numberOfResultFiles->data());
+	int bytesWritten = write(outputSocket, (void*)numberOfResultFiles->data(), bufferSize);
+	if (bytesWritten <= 0)
+		error("ERROR writing to socket");
+
+	delete numberOfResultFiles;
+	return numberOfFiles;
+}
+
+void ConnectionHandler::waitForCommand(const std::string &command)
+{
+	while(true)
+	{
+		int bytesRead = read(outputSocket, buffer, bufferSize);
+		if (bytesRead < 0)
+			error("ERROR reading from socket");
+
+		if( strcmp(buffer, command.data()) )
+		{
+			std::cout << "[ConnectionHandler] Received command: " << buffer;
+			commandQueue->push(new std::string(buffer));
+			bzero(buffer, bufferSize);
+			break;
+		}
+		bzero(buffer, bufferSize);
+	}
+}
+
+void ConnectionHandler::sendFile(std::string *filePath)
+{
 	std::ifstream resultFile;
-	resultFile.open(resultFilePath->data());
+	resultFile.open(filePath->data());
 	while (true)
 	{
 		int bytesRead = readFileToBuffer(resultFile);
@@ -98,7 +180,7 @@ void ConnectionHandler::sendResults()
 			break;
 		writeBufferToOutputSocket(bytesRead);
 	}
-	deleteResultFile(resultFilePath);
+	deleteResultFile(filePath);
 }
 
 int ConnectionHandler::readFileToBuffer(std::ifstream &resultFile)
@@ -132,9 +214,10 @@ void ConnectionHandler::deleteResultFile(std::string * resultFilePath)
 
 void ConnectionHandler::closeConnection()
 {
+	waitForCommand(MessageDictionary::closeConnection);
 	close(outputSocket);
 	std::cout << "[ConnectionHandler] Connection closed: "
-		  << clientIP << std::endl << std::endl;
+			  << clientIP << std::endl << std::endl;
 }
 
 void ConnectionHandler::setClientIP()

@@ -6,13 +6,15 @@
  */
 
 #include "CommandExecutor.hpp"
+#include "MessageDictionary.hpp"
 #include <fstream>
 
 CommandExecutor::CommandExecutor(BlockingQueue<std::string/*Command*/> * commandQueue,
-				 BlockingQueue<std::string> * resultFileQueue)
+		  	  	  	  	  	  	 BlockingQueue<std::string> * resultFileQueue)
 {
 	this->commandQueue = commandQueue;
 	this->resultFileQueue = resultFileQueue;
+	resultFilesCounter = 0;
 }
 
 void CommandExecutor::start()
@@ -33,17 +35,49 @@ void CommandExecutor::watchForCommands()
 	}
 }
 
-void CommandExecutor::execute(const std::string/*Command*/ *receivedCommand)
+void CommandExecutor::execute(const std::string *receivedCommand)
 {
-	std::cout << "[CommandExecutor] Executing command: " << receivedCommand->data() << std::endl;
-	std::string *resultFilePath = new std::string("testResultFile");
-	std::string command = makeSystemCommand(receivedCommand, resultFilePath);
+	if( strcmp(receivedCommand->data(), MessageDictionary::sendResultFilesNumber.data()) )
+		sendResultFilesNumber();
+	else if( strcmp(receivedCommand->data(), MessageDictionary::closeConnection.data()) )
+		beginNewExecutionSession();
+	else
+	{
+		std::string *resultFilePath = makeNewResultFileName();
+		executeSystemCommand(receivedCommand, resultFilePath);
+		resultFileQueue->push(resultFilePath);
+		resultFilesCounter++;
+	}
+	delete receivedCommand;
+}
+
+void CommandExecutor::sendResultFilesNumber()
+{
+	std::string *filesNumber = new std::string();
+	*filesNumber += resultFilesCounter;
+	resultFileQueue->push(filesNumber);
+}
+
+void CommandExecutor::beginNewExecutionSession()
+{
+	resultFilesCounter = 0;
+}
+
+std::string* CommandExecutor::makeNewResultFileName()
+{
+	std::string *fileName = new std::string();
+	*fileName += "resultFile" + (resultFilesCounter+1);
+	return fileName;
+}
+
+void CommandExecutor::executeSystemCommand(const std::string *systemCommand, const std::string *resultFilePath)
+{
+	std::cout << "[CommandExecutor] Executing command: " << systemCommand->data();
+	std::string command = makeSystemCommand(systemCommand, resultFilePath);
 
 	system(command.data());
 
-	std::cout << "[CommandExecutor] Command executed: " << receivedCommand->data() << std::endl;
-	delete receivedCommand;
-	resultFileQueue->push(resultFilePath);
+	std::cout << "[CommandExecutor] Command executed: " << systemCommand->data();
 }
 
 std::string CommandExecutor::makeSystemCommand(const std::string *command, const std::string *filePath)

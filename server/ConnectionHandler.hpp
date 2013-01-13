@@ -22,14 +22,13 @@
 class ConnectionHandler
 {
     public:
-        ConnectionHandler(int port,
-			  BlockingQueue<std::string/*Command*/> * commandQueue,
-			  BlockingQueue<std::string> * resultFileQueue);
+        ConnectionHandler(int port, BlockingQueue<std::string>*, BlockingQueue<std::string>*);
         virtual ~ConnectionHandler();
         void start();
         void join();
 
     private:
+        static const std::string password;
         char buffer[bufferSize];
         int mySocket, outputSocket, portNumber;
         socklen_t clientAddressLength;
@@ -38,18 +37,24 @@ class ConnectionHandler
 
         boost::thread connectionHandler;
 
-        BlockingQueue<std::string/*Command*/> * commandQueue;
+        BlockingQueue<std::string> * commandQueue;
         BlockingQueue<std::string> * resultFileQueue;
 
         void initializeMySocket();
         void watchForClientRequests();
         void initializeConnection();
-        void receiveMessage();
-        void sendResults();
-        int readFileToBuffer(std::ifstream &resultFile);
-        void writeBufferToOutputSocket(int bytesRead);
-        void deleteResultFile(std::string * resultFilePath);
+        void receiveCommands();
+        void sendResultFiles();
         void closeConnection();
+
+        bool isPasswordCorrect();
+        bool verifyPasswordAndAnswer(char*);
+        int sendNumberOfResultFiles();
+        void waitForCommand(const std::string&);
+        void sendFile(std::string*);
+        int readFileToBuffer(std::ifstream&);
+        void writeBufferToOutputSocket(int);
+        void deleteResultFile(std::string*);
         void setClientIP();
-        void error(const char* message);
+        void error(const char*);
 };
