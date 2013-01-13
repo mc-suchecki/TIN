@@ -1,2 +1,2 @@
-kotek1
-kotek2
+connect 127.0.0.1 ja 1500
+send ja urxvt

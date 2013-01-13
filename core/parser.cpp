@@ -43,14 +43,14 @@ vector<ConsoleEvent*> Parser::parse(string input){
         >> (qi::int_)[push_back(phoenix::ref(ports), _1)]
         >> *(
           ", "
-        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(addresses), _1)]
-        >> " "
-        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(command_aliases),_1)]
-        >> " "
-        >> (qi::int_)[push_back(phoenix::ref(ports), _1)]
+          >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(addresses), _1)]
+          >> " "
+          >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(command_aliases),_1)]
+          >> " "
+          >> (qi::int_)[push_back(phoenix::ref(ports), _1)]
+          )
        )
-      )
-      
+
        | (
          lit("send")[phoenix::ref(action) = "send"]
          >> " "
@@ -63,19 +63,15 @@ vector<ConsoleEvent*> Parser::parse(string input){
          >> qi::as_string[+(qi::char_)][phoenix::ref(command) = _1]
          )
        | (
-         lit("exit")[phoenix::ref(action) = "exit"]
+           lit("exit")[phoenix::ref(action) = "exit"]
          )
        | (
-         lit("help")[phoenix::ref(action) = "help"]
+           lit("help")[phoenix::ref(action) = "help"]
          )
        | (
-         lit("sendf")[phoenix::ref(action) = "sendf"]
-         >> " "
-         >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(addresses),_1)]
-         >> *(
-           ", "
-           >> qi::as_string[+(qi::char_ - " " - ",")][push_back(phoenix::ref(addresses),_1)]
-           )
+           lit("run")[phoenix::ref(action) = "run"]
+           >> " "
+           >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(files),_1)]
            >> *(
              " "
              >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(files), _1)]
@@ -95,9 +91,8 @@ vector<ConsoleEvent*> Parser::parse(string input){
       for(unsigned int i = 0; i < command_aliases.size();++i)
         retVector.push_back(new SendCommandEvent(aliases[command_aliases[i]], command));
     }
-    else if(action == "sendf"){
+    else if(action == "run"){
       ifstream inputFile;
-
       for(unsigned int i = 0; i < files.size(); ++i){
         inputFile.open(files[i].c_str());
         if(!inputFile){
@@ -105,9 +100,11 @@ vector<ConsoleEvent*> Parser::parse(string input){
           continue;
         }
         string command;
-        while(inputFile >> command){
-          for(unsigned int i = 0; i < addresses.size();++i)
-            retVector.push_back(new SendCommandEvent(addresses[i], command));
+        while(!inputFile.eof()){
+          getline(inputFile, command);
+          vector<ConsoleEvent*> events =  parse(command);
+          for(unsigned int i = 0; i < events.size();++i)
+            retVector.push_back(events[i]);
         }
 
         inputFile.close();
@@ -126,12 +123,10 @@ vector<ConsoleEvent*> Parser::parse(string input){
       cout << "  examples:" << std::endl;
       cout << "    send alias command_to_execute" << std::endl;
       cout << "    send alias, alias command_to_execute" << std::endl;
-      cout << "sendf - send commands from file to connected server" << std::endl;
+      cout << "run - run commands from file"<< std::endl;
       cout << "  examples:" << std::endl;
-      cout << "    sendf 123.123.123.123 ./file/path" << std::endl;
-      cout << "    sendf 123.123.123.123 ./file/path ./file/path2" << std::endl;
-      cout << "    sendf 123.123.123.123, 234.234.234.234 ./file/path" << std::endl;
-      cout << "    sendf 123.123.123.123, 234.234.234.234 ./file/path ./file/path2" << std::endl << std::endl;
+      cout << "    run ./file/path" << std::endl;
+      cout << "    run ./file/path ./file/path2" << std::endl;
       cout << "  file contents:" << std::endl;
       cout << "    command to execute 1" << std::endl;
       cout << "    command to execute 2" << std::endl << std::endl;
@@ -141,7 +136,7 @@ vector<ConsoleEvent*> Parser::parse(string input){
 
   }
   else {
-    cout << "Unrecognised command! Type \"help\" to display available commands." << endl;
+    cout << "Unrecognised command " << input << "! Type \"help\" to display available commands." << endl;
   }
   return retVector;
 }

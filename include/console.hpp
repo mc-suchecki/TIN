@@ -21,4 +21,5 @@ class Console {
     EventQueue * queue;
     ///command history
     std::vector<std::string> history;
+    void executeLine(std::string line);
 };

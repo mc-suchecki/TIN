@@ -42,9 +42,10 @@ bool Controller::handleConfig(int argc, char * argv[]){
     po::options_description configOptions("Configuration");
     configOptions.add_options()
       ("port,p", po::value<int>(), "default port")
-      ("config,c", "configuration file")
+      ("file,f", po::value<string>(), "script file to run")
+      ("config,c", po::value<string>(), "configuration file")
       ("debug,d", po::value<int>(), "debug level: 0 - none, 1 - events, 2 - all")
-      ("logfile,l", "log file")
+      ("logfile,l", po::value<string>(), "log file")
       ;
 
     po::options_description cmdLineOptions;
@@ -78,7 +79,10 @@ bool Controller::handleConfig(int argc, char * argv[]){
       config->setDebug(vm["debug"].as<int>());
 
     if(vm.count("logfile"))
-      config->setLogFile(vm["logfile"].as<std::string>());
+      config->setLogFile(vm["logfile"].as<string>());
+
+    if(vm.count("file"))
+      config->setScriptFile(vm["file"].as<std::string>());
 
   } catch(exception& e) {
     cout << "error: " << e.what() << endl;

@@ -23,6 +23,10 @@ class Config{
     void setLogFile(std::string logFile){this->logFile = logFile;}
     std::string getLogFile(){return logFile;}
 
+    // script file
+    void setScriptFile(std::string scriptFile){this->scriptFile = scriptFile;}
+    std::string getScriptFile(){return scriptFile;}
+
   private:
     Config();
     Config& operator= (Config&);
@@ -34,5 +38,6 @@ class Config{
     int port;
     int debug;
     std::string logFile;
+    std::string scriptFile;
 
 };

@@ -18,8 +18,8 @@ class ConsoleEvent : public Event {
 
 class CreateConnectionEvent : public ConsoleEvent {
   public:
-    CreateConnectionEvent(std::string address = "", int port = 0)
-      : address(address), port(port) {};
+    CreateConnectionEvent(std::string address = "", int port = 0, std::string password = "")
+      : address(address), port(port), password(password) {};
     virtual ~CreateConnectionEvent() {};
     virtual std::string getMessage() {
       if(port == 0)
@@ -30,9 +30,11 @@ class CreateConnectionEvent : public ConsoleEvent {
 
     std::string getAddress() {return address;};
     int getPort() {return port;};
+    std::string getPassword() {return password;}
   private:
     std::string address;
     int port;
+    std::string password;
 };
 
 class SendCommandEvent : public ConsoleEvent {
