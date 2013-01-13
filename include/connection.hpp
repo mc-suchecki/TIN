@@ -72,7 +72,7 @@ class Connection {
     const IPAddress IP_ADDRESS;
     const PortsNr PORTS_NUMBER;  
     boost::asio::ip::tcp::iostream remoteConnection;
-    int sockfd;
+    volatile int sockfd;
     struct sockaddr_in servAddr;
     char buffer[BUFFER_SIZE];
 
@@ -87,15 +87,14 @@ class Connection {
     void close_internal();
 
     bool prepareSocket();
+    bool authenticate(std::string password);
     bool sendPassword(std::string password);
     bool sendCommand(const Command &command);
-    void receiveResults();
-
-    void getCurrTime(char *timeBuff, int n) {
-      time_t now = time(0);
-      tm *localtm = localtime(&now);
-      strftime(timeBuff, n*sizeof(char), "%Y-%m-%d_%X", localtm);
-    };
+    bool receiveResults();
+    int receiveMsg();
+    int getNumOfResultFiles();
+    bool receiveAndSaveFile();
+    void getCurrTime(char *timeBuff, int n);
 
     //internal classes representing actions (design pattern: command)
     class Action {

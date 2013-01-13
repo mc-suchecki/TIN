@@ -64,12 +64,13 @@ void Connection::init_internal(string password) {
     return;
   }
 
-  if(sendPassword(password))
+  if(authenticate(password))
     eventQueue->push(new ConnectionEstablishedEvent());
 
   else {
     string errorMsg = "Authentication failure";
     eventQueue->push(new ConnectionFailedEvent(errorMsg));
+    sockfd = -1;
   }
 }
 
@@ -84,7 +85,8 @@ void Connection::close_internal() {
 
 void Connection::execute_internal(const Command &command) {
   if(sockfd < 0){
-    cerr<< "(" << IP_ADDRESS << ") Cannot execute command on uninitialized connection" << endl;
+    string errMsg = "(" + IP_ADDRESS + ") Cannot execute command on uninitialized connection";
+    eventQueue->push(new CommandSendingFailedEvent(errMsg));
     return;
   }
 
@@ -114,7 +116,6 @@ bool Connection::sendCommand(const Command &command) {
   if(n < 0) {
     string errMsg = "(" + IP_ADDRESS + ") Failed to write to socket";
     eventQueue->push(new CommandSendingFailedEvent(errMsg));
-    cerr << errMsg << endl;
     return false;
   }
 
@@ -122,50 +123,35 @@ bool Connection::sendCommand(const Command &command) {
   return true;
 }
 
-void Connection::receiveResults() {
-  //acquire current date and time
-  char timeBuff[80];
-  getCurrTime(timeBuff,80);
+bool Connection::sendPassword(string password){
+  strncpy(buffer, password.c_str(), BUFFER_SIZE); 
+  int n = write(sockfd, buffer, strlen(buffer));
 
-  // open a file of name IP_ADDRESS_DATE_TIME
-  ofstream resultFile;
-  string filename = IP_ADDRESS+"_"+timeBuff;
-  resultFile.open(filename.c_str());
-
-  // read in loop data and write them into file.
-  int n;
-  do {
-    memset(buffer,0,BUFFER_SIZE);
-    n = read(sockfd, buffer, BUFFER_SIZE-1);
-    if(n<0)
-      break; 
-
-    resultFile.write(buffer, n);
-    if(resultFile.fail()){
-      cerr<<"Error while writing to the file"<<endl;
-      n = -1;
-    }
-  }
-  while(n>0);//FIXME How can I recognize the end of the transmission?
-
-  if(n<0) {
-    string errorMsg = "(" + IP_ADDRESS + ") Failed to receive the result file";
-    eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
-    cerr << errorMsg << std::endl;
-  }
-  else {
-    ++numOfResults;
-    eventQueue->push(new ActionDoneEvent(filename));
+  if(n < 0) {
+    string errorMsg = "(" + IP_ADDRESS + ") Failed to write password to socket";
+    eventQueue->push(new ConnectionFailedEvent(errorMsg));
+    return false;
   }
 
-  resultFile.close(); 
+  return true;
 }
 
-bool Connection::sendPassword(string password) {
-  // FIXME md5(password) instead of plain-text password should be sent
-  Command authCmd(password, Command::CLOSE);
-  
-  if(!sendCommand(authCmd))
+bool Connection::receiveResults() {
+  int numOfFiles = getNumOfResultFiles();
+
+  if(numOfFiles<=0)
+    return false;
+
+  for(int i=0; i<numOfFiles; ++i){
+    if(!receiveAndSaveFile())
+      return false;
+  }
+
+  return true;
+}
+
+bool Connection::authenticate(string password) {
+  if(!sendPassword(password))
     return false;
 
   //receive authentication response
@@ -199,3 +185,67 @@ bool Connection::prepareSocket(){
 
   return true;
 }
+
+int Connection::receiveMsg(){
+  memset(buffer, 0, BUFFER_SIZE);
+  int bytesRead = read(sockfd, buffer, BUFFER_SIZE-1);
+  return bytesRead;
+}
+
+int Connection::getNumOfResultFiles(){
+  int bytesRead = receiveMsg();
+  if(bytesRead <= 0){
+    string errorMsg = "(" + IP_ADDRESS + ") Failed to receive number of result files";
+    eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
+  }
+
+  int numOfResFiles = boost::lexical_cast<int>(buffer);
+  return numOfResFiles;
+}
+
+void Connection::getCurrTime(char *timeBuff, int n) {
+  time_t now = time(0);
+  tm *localtm = localtime(&now);
+  strftime(timeBuff, n*sizeof(char), "%Y-%m-%d_%X", localtm);
+}
+
+bool Connection::receiveAndSaveFile(){
+  //acquire current date and time
+  char timeBuff[80];
+  getCurrTime(timeBuff,80);
+
+  // open a file of name IP_ADDRESS_DATE_TIME
+  ofstream resultFile;
+  string filename = IP_ADDRESS+"_"+timeBuff;
+  resultFile.open(filename.c_str());
+
+  int bytesRead;
+  do {
+    memset(buffer,0,BUFFER_SIZE);
+    bytesRead = read(sockfd, buffer, BUFFER_SIZE-1);
+
+    if(bytesRead==0)
+      break; 
+
+    else if(bytesRead < 0){
+      string errorMsg = "(" + IP_ADDRESS + ") Failed to receive the result file";
+      eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
+      return false;
+    }
+
+    resultFile.write(buffer, bytesRead);
+    if(resultFile.fail()){
+      string errorMsg = "(" + IP_ADDRESS + ") Failed to save received file";
+      eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
+      return false;
+    }
+  }
+  while(bytesRead>0);//FIXME How can I recognize the end of the transmission?
+
+  ++numOfResults;
+  eventQueue->push(new ActionDoneEvent(filename));
+
+  resultFile.close();
+  return true;
+}
+
