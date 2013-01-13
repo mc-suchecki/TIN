@@ -37,9 +37,9 @@ void CommandExecutor::watchForCommands()
 
 void CommandExecutor::execute(const std::string *receivedCommand)
 {
-	if( strcmp(receivedCommand->data(), MessageDictionary::sendResultFilesNumber.data()) )
+	if( strcmp(receivedCommand->data(), MessageDictionary::sendResultFilesNumber.data()) == 0)
 		sendResultFilesNumber();
-	else if( strcmp(receivedCommand->data(), MessageDictionary::closeConnection.data()) )
+	else if( strcmp(receivedCommand->data(), MessageDictionary::closeConnection.data()) == 0)
 		beginNewExecutionSession();
 	else
 	{
