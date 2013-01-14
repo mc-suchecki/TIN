@@ -36,6 +36,16 @@ class CreateConnectionEvent : public ConsoleEvent {
     int port;
     std::string password;
 };
+class CloseEvent : public ConsoleEvent{
+  public:
+    CloseEvent(std::string address = "")
+      : ConsoleEvent("Close connection with " + address),
+      address(address) {};
+    std::string getAddress() {return address;}
+    std::string getMessage() {return "Closing connection";}
+  private:
+    std::string address;
+};
 
 class SendCommandEvent : public ConsoleEvent {
   public:

@@ -27,6 +27,7 @@ vector<ConsoleEvent*> Parser::parse(string input){
   string action;
   vector<string> command_aliases;
   vector<string> addresses;
+  vector<string> passwords;
   vector<string> files;
   vector<int> ports;
   string command;
@@ -41,6 +42,8 @@ vector<ConsoleEvent*> Parser::parse(string input){
         >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(command_aliases),_1)]
         >> " "
         >> (qi::int_)[push_back(phoenix::ref(ports), _1)]
+        >> " "
+        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(passwords),_1)]
         >> *(
           ", "
           >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(addresses), _1)]
@@ -48,6 +51,8 @@ vector<ConsoleEvent*> Parser::parse(string input){
           >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(command_aliases),_1)]
           >> " "
           >> (qi::int_)[push_back(phoenix::ref(ports), _1)]
+        >> " "
+        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(passwords),_1)]
           )
        )
 
@@ -69,6 +74,11 @@ vector<ConsoleEvent*> Parser::parse(string input){
            lit("help")[phoenix::ref(action) = "help"]
          )
        | (
+           lit("close")[phoenix::ref(action) = "close"]
+          >> " "
+          >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(command_aliases),_1)]
+         )
+       | (
            lit("run")[phoenix::ref(action) = "run"]
            >> " "
            >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(files),_1)]
@@ -83,7 +93,7 @@ vector<ConsoleEvent*> Parser::parse(string input){
   if(result){
     if(action == "connect"){
       for(unsigned int i = 0; i < addresses.size();++i){
-        retVector.push_back(new CreateConnectionEvent(addresses[i], ports[i]));
+        retVector.push_back(new CreateConnectionEvent(addresses[i], ports[i], passwords[i]));
         aliases[command_aliases[i]]=addresses[i];
       }
     }
@@ -109,6 +119,9 @@ vector<ConsoleEvent*> Parser::parse(string input){
 
         inputFile.close();
       }
+    }
+    else if(action == "close"){
+      retVector.push_back(new CloseEvent(aliases[command_aliases[0]]));
     }
     else if(action == "exit"){
       exit(0);

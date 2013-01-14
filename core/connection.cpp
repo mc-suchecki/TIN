@@ -204,7 +204,7 @@ int Connection::getNumOfResultFiles(){
     string errorMsg = "(" + IP_ADDRESS + ") Failed to receive number of result files";
     eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
   }
-
+cout<<buffer<<endl;
   int numOfResFiles = boost::lexical_cast<int>(buffer);
   cout<<endl<<numOfResFiles<<endl;
   Command sendFilesCmd(MessageDictionary::sendResultFiles, Command::CLOSE);

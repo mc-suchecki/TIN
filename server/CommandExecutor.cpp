@@ -53,8 +53,9 @@ void CommandExecutor::execute(const std::string *receivedCommand)
 
 void CommandExecutor::sendResultFilesNumber()
 {
-	std::string *filesNumber = new std::string();
-	*filesNumber += resultFilesCounter;
+	std::ostringstream stringStream;
+	stringStream << resultFilesCounter;
+	std::string *filesNumber = new std::string(stringStream.str());
 	resultFileQueue->push(filesNumber);
 }
 
@@ -73,12 +74,12 @@ std::string* CommandExecutor::makeNewResultFileName()
 
 void CommandExecutor::executeSystemCommand(const std::string *systemCommand, const std::string *resultFilePath)
 {
-	std::cout << "[CommandExecutor] Executing command: " << systemCommand->data();
+	std::cout << "[CommandExecutor] Executing command: " << systemCommand->data() << std::endl;
 	std::string command = makeSystemCommand(systemCommand, resultFilePath);
 
 	system(command.data());
 
-	std::cout << "[CommandExecutor] Command executed: " << systemCommand->data();
+	std::cout << "[CommandExecutor] Command executed: " << systemCommand->data() << std::endl;
 }
 
 std::string CommandExecutor::makeSystemCommand(const std::string *command, const std::string *filePath)

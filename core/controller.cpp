@@ -124,6 +124,10 @@ void Controller::fillEventActionMap() {
   eventActionMap.insert(std::make_pair(&typeid(createConnectionEvent),
         &Controller::createConnection));
 
+  CloseEvent closeEvent;
+  eventActionMap.insert(std::make_pair(&typeid(closeEvent),
+        &Controller::close));
+
   SendCommandEvent sendCommandEvent;
   eventActionMap.insert(std::make_pair(&typeid(sendCommandEvent),
         &Controller::sendCommand));
@@ -170,10 +174,27 @@ void Controller::createConnection(Event *event) {
   //create connection
   Connection *newConnection =
     new Connection(eventQueue, createConnectionEvent->getAddress(), port);
-  newConnection->init("password"); //FIXME init needs a string with password
+  newConnection->init(createConnectionEvent->getPassword()); 
   activeConnections.push_back(newConnection);
 
   logger->logEvent(createConnectionEvent);
+}
+
+void Controller::close(Event *event){
+  CloseEvent *closeEvent =
+    dynamic_cast<CloseEvent *>(event);
+
+  vector<Connection *>::iterator it;
+
+  //find Connection with desired IP and send command
+  for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
+    if(closeEvent->getAddress() == (*it)->getIPAddress()) {
+      (*it)->close();
+      logger->logEvent(closeEvent);
+      return;
+    }
+  }
+  logger->logEvent(closeEvent);
 }
 
 /** Method responsible for sending command to one of the servers using Connection. */

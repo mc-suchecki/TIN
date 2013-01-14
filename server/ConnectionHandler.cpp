@@ -144,7 +144,7 @@ int ConnectionHandler::sendNumberOfResultFiles()
 {
 	std::string *numberOfResultFiles = resultFileQueue->pop();
 	int numberOfFiles = atoi(numberOfResultFiles->data());
-	int bytesWritten = write(outputSocket, (void*)numberOfResultFiles->data(), bufferSize);
+	int bytesWritten = write(outputSocket, (void*)numberOfResultFiles->c_str(), bufferSize);
 	if (bytesWritten <= 0)
 		error("ERROR writing to socket");
 
@@ -162,7 +162,7 @@ void ConnectionHandler::waitForCommand(const std::string &command)
 
 		if( strcmp(buffer, command.data()) == 0)
 		{
-			std::cout << "[ConnectionHandler] Received command: " << buffer;
+			std::cout << "[ConnectionHandler] Received command: " << buffer << std::endl;
 			commandQueue->push(new std::string(buffer));
 			bzero(buffer, bufferSize);
 			break;

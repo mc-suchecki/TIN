@@ -42,6 +42,7 @@ class Controller {
 
     //methods handling particular console events
     void createConnection(Event *event);
+    void close(Event *event);
     void sendCommand(Event *event);
     void cancelAll(Event *event);
 
