@@ -12,7 +12,7 @@
 const std::string ConnectionHandler::password = "password";
 
 ConnectionHandler::ConnectionHandler(int port,
-		  BlockingQueue<std::string> * commandQueue,
+		  BlockingQueue<std::string/*Command*/> * commandQueue,
 		  BlockingQueue<std::string> * resultFileQueue)
 {
 	this->commandQueue = commandQueue;
@@ -26,13 +26,13 @@ void ConnectionHandler::initializeMySocket()
 {
 	mySocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (mySocket < 0)
-		fatalError("ERROR opening socket");
+		error("ERROR opening socket");
 	bzero((char *) &serverAddress, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
 	serverAddress.sin_addr.s_addr = INADDR_ANY;
 	serverAddress.sin_port = htons(portNumber);
 	if (bind(mySocket, (struct sockaddr *) &serverAddress, sizeof(serverAddress)) < 0)
-		fatalError("ERROR on binding");
+		error("ERROR on binding");
 }
 
 ConnectionHandler::~ConnectionHandler()
@@ -83,9 +83,7 @@ bool ConnectionHandler::isPasswordCorrect()
 {
 	int bytesRead = read(outputSocket, buffer, bufferSize);
 	if (bytesRead < 0)
-	{
-		error("ERROR reading password from socket");
-	}
+		error("ERROR reading from socket");
 	bool returnValue = verifyPasswordAndAnswer(buffer);
 	bzero(buffer, bufferSize);
 	return returnValue;
@@ -98,7 +96,7 @@ bool ConnectionHandler::verifyPasswordAndAnswer(char* readPassword)
 		int bytesWritten = write(outputSocket, (void*)MessageDictionary::passwordIncorrect.data(), bufferSize);
 		if (bytesWritten <= 0)
 			error("ERROR writing to socket");
-		std::cout << "[ConnectionHandler] Unknown client rejected" << std::endl << std::endl;
+		std::cout << "[ConnectionHandler] Unknown client rejected" << std::endl;
 		return false;
 	}
 	else
@@ -234,12 +232,6 @@ void ConnectionHandler::setClientIP()
 }
 
 void ConnectionHandler::error(const char* message)
-{
-	perror(message);
-	//TODO some disconnection method
-}
-
-void ConnectionHandler::fatalError(const char* message)
 {
 	perror(message);
 	exit(1);

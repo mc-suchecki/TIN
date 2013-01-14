@@ -19,7 +19,7 @@ class Server
 	private:
 		ConnectionHandler *connectionHandler;
 		CommandExecutor * commandExecutor;
-		BlockingQueue<std::string>* commandQueue;
+		BlockingQueue<std::string> * commandQueue;
 		BlockingQueue<std::string> * resultFileQueue;
 };
 

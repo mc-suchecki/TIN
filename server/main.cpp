@@ -25,6 +25,8 @@ int main(int argc, char *argv[])
 
 
 //TODO
+//-ignoring errors
+
 //- more proper sending of resultFilesNumber
 //- function readCommand/writeAnswer
 //- command count

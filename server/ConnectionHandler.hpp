@@ -57,4 +57,5 @@ class ConnectionHandler
         void deleteResultFile(std::string*);
         void setClientIP();
         void error(const char*);
+	void fatalError(const char*);
 };

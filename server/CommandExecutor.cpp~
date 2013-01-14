@@ -65,9 +65,8 @@ void CommandExecutor::beginNewExecutionSession()
 
 std::string* CommandExecutor::makeNewResultFileName()
 {
-	std::ostringstream stringStream;
-	stringStream << "resultFile" << (resultFilesCounter+1);
-	std::string *fileName = new std::string(stringStream.str());
+	std::string *fileName = new std::string();
+	*fileName += "resultFile" + (resultFilesCounter+1);
 	return fileName;
 }
 
