@@ -12,7 +12,8 @@ core = [
   'core/console.cpp',
   'core/parser.cpp',
   'core/logger.cpp',
-  'common/MessageDictionary.cpp'
+  'common/MessageDictionary.cpp',
+  'common/MD5.cpp'
 ]
 
 connection = [

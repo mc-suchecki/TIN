@@ -51,6 +51,10 @@ void Connection::execute(const Command &command) {
   actionsQueue.push(new ExecuteAction(this,command));
 }
 
+void Connection::downloadFile(std::string fileName){
+  actionsQueue.push(new DownloadFileAction(this, fileName));
+}
+
 void Connection::close() {
   actionsQueue.push(new CloseAction(this));
 }
@@ -76,7 +80,17 @@ void Connection::init_internal(string password) {
 }
 
 void Connection::close_internal() {
-  receiveResults();
+  memset(buffer, 0, BUFFER_SIZE);
+  strncpy(buffer, MessageDictionary::closeConnection.c_str(), BUFFER_SIZE); 
+  int n = write(sockfd, buffer, strlen(buffer));
+
+  cout<<buffer<<endl;
+  if(n < 0) {
+    string errorMsg = "(" + IP_ADDRESS
+      + ") Failed to send CLOSE_CONNECTION command to server";
+
+    eventQueue->push(new ConnectionFailedEvent(errorMsg));
+  }
 }
 
 void Connection::execute_internal(const Command &command) {
@@ -88,6 +102,10 @@ void Connection::execute_internal(const Command &command) {
 
   if(!sendCommand(command))
     return;
+}
+
+void Connection::downloadFile_internal(string fileName){
+  //TODO
 }
 
 std::string Connection::getIPAddress() {
@@ -119,7 +137,13 @@ bool Connection::sendCommand(const Command &command) {
   return true;
 }
 
-bool Connection::sendPassword(string password){
+bool Connection::sendAuthenticationInfo(string password, string challange){
+  string challPass = password;
+  challPass += challange;
+
+
+
+  memset(buffer, 0, BUFFER_SIZE);
   strncpy(buffer, password.c_str(), BUFFER_SIZE); 
   int n = write(sockfd, buffer, strlen(buffer));
 
@@ -133,32 +157,17 @@ bool Connection::sendPassword(string password){
   return true;
 }
 
-bool Connection::receiveResults() {
-  int numOfFiles = getNumOfResultFiles();
-
-  if(numOfFiles<=0)
-    return false;
-
-  Command getFilesCmd(MessageDictionary::sendResultFiles, Command::CLOSE);
-  if(!sendCommand(getFilesCmd))
-    return false;
-
-  for(int i=0; i<numOfFiles; ++i){
-    if(!receiveAndSaveFile())
-      return false;
-  }
-
-  return true;
-}
-
 bool Connection::authenticate(string password) {
-  if(!sendPassword(password))
+  std::string challange = getChallange();
+  if(challange.compare("0") == 0)
+    return false;
+
+  if(!sendAuthenticationInfo(password,challange))
     return false;
 
   //receive authentication response
-  memset(buffer,0,BUFFER_SIZE);
-  int n = read(sockfd, buffer, BUFFER_SIZE-1);
-  if(n<0)
+  int bytesReceived = receiveMsg();
+  if(bytesReceived<0)
     return false; 
 
   cout<<buffer;
@@ -194,24 +203,6 @@ int Connection::receiveMsg(){
   return bytesRead;
 }
 
-int Connection::getNumOfResultFiles(){
-  Command getFilesNrCmd(MessageDictionary::sendResultFilesNumber, Command::CLOSE);
-  if(!sendCommand(getFilesNrCmd))
-    return -1;
-
-  int bytesRead = receiveMsg();
-  if(bytesRead <= 0){
-    string errorMsg = "(" + IP_ADDRESS + ") Failed to receive number of result files";
-    eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
-  }
-cout<<buffer<<endl;
-  int numOfResFiles = boost::lexical_cast<int>(buffer);
-  cout<<endl<<numOfResFiles<<endl;
-  Command sendFilesCmd(MessageDictionary::sendResultFiles, Command::CLOSE);
-
-  return numOfResFiles;
-}
-
 void Connection::getCurrTime(char *timeBuff, int n) {
   time_t now = time(0);
   tm *localtm = localtime(&now);
@@ -230,13 +221,12 @@ bool Connection::receiveAndSaveFile(){
 
   int bytesRead;
   do {
-    memset(buffer,0,BUFFER_SIZE);
-    bytesRead = read(sockfd, buffer, BUFFER_SIZE-1);
+    bytesRead = receiveMsg();
 
     if(bytesRead==0)
       break; 
 
-    else if(bytesRead < 0){
+    if(bytesRead < 0){
       string errorMsg = "(" + IP_ADDRESS + ") Failed to receive the result file";
       eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
       return false;
@@ -258,3 +248,7 @@ bool Connection::receiveAndSaveFile(){
   return true;
 }
 
+string Connection::getChallange(){
+ //TODO
+ return string("0");
+}

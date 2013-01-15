@@ -53,6 +53,7 @@ class Connection {
     void init(std::string password);
     void execute(const Command &command);
     void close();
+    void downloadFile(std::string fileName);
 
     std::string getIPAddress();
 
@@ -60,6 +61,7 @@ class Connection {
     friend class InitAction;
     friend class CloseAction;
     friend class ExecuteAction;
+    friend class DownloadFileAction;
     class Action;
 
     boost::thread runThread;
@@ -85,31 +87,31 @@ class Connection {
     void init_internal(std::string password);
     void execute_internal(const Command &command);
     void close_internal();
+    void downloadFile_internal(std::string fileName);
 
     bool prepareSocket();
     bool authenticate(std::string password);
-    bool sendPassword(std::string password);
+    bool sendAuthenticationInfo(std::string password, std::string challange);
     bool sendCommand(const Command &command);
-    bool receiveResults();
     int receiveMsg();
-    int getNumOfResultFiles();
     bool receiveAndSaveFile();
     void getCurrTime(char *timeBuff, int n);
+    std::string getChallange();
 
     //internal classes representing actions (design pattern: command)
     class Action {
       public:
         Action(Connection *conn): connection(conn){}
         virtual void execute() = 0;
-        virtual ~Action() {};
+        virtual ~Action() {}
       protected:
         Connection *connection;
     };
 
     class InitAction: public Action {
       public: 
-        InitAction(Connection *conn, std::string pwd): Action(conn), password(pwd) {};
-        virtual ~InitAction() {};
+        InitAction(Connection *conn, std::string pwd): Action(conn), password(pwd) {}
+        virtual ~InitAction() {}
 
         virtual void execute() {
           connection->init_internal(password);
@@ -122,8 +124,8 @@ class Connection {
     class ExecuteAction: public Action {
       public:
         ExecuteAction(Connection *conn, Command cmd):
-          Action(conn), command(cmd) {};
-        virtual ~ExecuteAction() {};
+          Action(conn), command(cmd) {}
+        virtual ~ExecuteAction() {}
 
         virtual void execute() {
           connection->execute_internal(command);
@@ -135,12 +137,25 @@ class Connection {
 
     class CloseAction: public Action {
       public: 
-        CloseAction(Connection *conn): Action(conn) {};
-        virtual ~CloseAction() {};
+        CloseAction(Connection *conn): Action(conn) {}
+        virtual ~CloseAction() {}
 
         virtual void execute() {
           connection->close_internal();
         }
+    };
+
+    class DownloadFileAction: public Action {
+      public:
+        DownloadFileAction(Connection *conn, std::string fn):
+          Action(conn), fileName(fn) {}
+        virtual ~DownloadFileAction() {}
+
+        virtual void execute() {
+          connection->downloadFile_internal(fileName);
+        }
+      private:
+        std::string fileName;
     };
 };
 
