@@ -109,7 +109,6 @@ void Connection::downloadFile_internal(string remoteFile, string localFile){
 
   memset(buffer, 0, BUFFER_SIZE);
   strncpy(buffer, fileRequest.c_str(), BUFFER_SIZE); 
-  cout << "Request: " << buffer << endl;
   int n = write(sockfd, buffer, strlen(buffer));
   if(n<=0){
     string errMsg = "(" + IP_ADDRESS + ") Failed to send request for a file";
@@ -229,8 +228,11 @@ bool Connection::receiveAndSaveFile(string localFile){
   resultFile.open(localFile.c_str());
 
   int bytesRead;
+  int i=0;
   do {
+    cout<<++i<<" obieg"<<endl;
     bytesRead = receiveMsg();
+    cout<<"Buffor: "<<buffer<<endl;
 
     if(bytesRead==0){
       cout<<"Pobrano cały plik"<<endl;
