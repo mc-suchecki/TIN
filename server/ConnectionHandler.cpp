@@ -94,7 +94,7 @@ bool ConnectionHandler::receiveChallengeRequest()
 {
 	readFromOutputSocketToBuffer(bufferSize);
 
-	if( strcmp(buffer, MessageDictionary::sendChallenge.c_str()) == 0)
+	if( isTheCommand(MessageDictionary::closeConnection, (string)buffer) )
 	{
 		bzero(buffer, bufferSize);
 		return true;
@@ -137,8 +137,6 @@ void ConnectionHandler::receiveCommands()
 	while(connectionOpened)
 	{
 		readFromOutputSocketToBuffer(bufferSize);
-
-		log("Received command: " + (string)buffer);
 		recogizeAndExecuteCommand();
 	}
 }
@@ -149,11 +147,19 @@ void ConnectionHandler::recogizeAndExecuteCommand()
 	bzero(buffer, bufferSize);
 
 	if(isTheCommand(MessageDictionary::sendFile, command))
+	{
 		sendFile(command);
+	}
 	else if(isTheCommand(MessageDictionary::closeConnection, command))
+	{
+		log("Received request: close connection");
 		connectionOpened = false;
+	}
 	else
+	{
+		log("Received command: " + (string)buffer);
 		executeSystemCommand(command);
+	}
 }
 
 bool ConnectionHandler::isTheCommand(const string &searchedString, const string &command)
@@ -167,6 +173,7 @@ void ConnectionHandler::sendFile(string &command)
 {
 	//TODO some security in case of wrong file name
 	string filePath = getFilePathFrom(command);
+	log("Received request: send file " + filePath);
 	std::ifstream fileToSend;
 	fileToSend.open(filePath.data());
 	while (true)
@@ -230,7 +237,7 @@ void ConnectionHandler::readFromOutputSocketToBuffer(int numberOfBytes)
 
 void ConnectionHandler::writeToOutputSocket(void * message, int bytesToWrite)
 {
-	void *bufferPointer = buffer;
+	void *bufferPointer = message;
 	while (bytesToWrite > 0)
 	{
 		int bytesWritten = write(outputSocket, bufferPointer, bytesToWrite);
