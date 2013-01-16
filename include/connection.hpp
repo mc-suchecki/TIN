@@ -53,7 +53,7 @@ class Connection {
     void init(std::string password);
     void execute(const Command &command);
     void close();
-    void downloadFile(std::string fileName);
+    void downloadFile(std::string remoteFile, std::string localFile);
 
     std::string getIPAddress();
 
@@ -87,14 +87,14 @@ class Connection {
     void init_internal(std::string password);
     void execute_internal(const Command &command);
     void close_internal();
-    void downloadFile_internal(std::string fileName);
+    void downloadFile_internal(std::string remoteFile, std::string localFile);
 
     bool prepareSocket();
     bool authenticate(std::string password);
     bool sendAuthenticationInfo(std::string password, std::string challenge);
     bool sendCommand(const Command &command);
     int receiveMsg();
-    bool receiveAndSaveFile();
+    bool receiveAndSaveFile(std::string destFile);
     void getCurrTime(char *timeBuff, int n);
     std::string getChallenge();
 
@@ -147,15 +147,15 @@ class Connection {
 
     class DownloadFileAction: public Action {
       public:
-        DownloadFileAction(Connection *conn, std::string fn):
-          Action(conn), fileName(fn) {}
+        DownloadFileAction(Connection *conn, std::string src, std::string dst):
+          Action(conn), sourceFile(src), destinationFile(dst) {}
         virtual ~DownloadFileAction() {}
 
         virtual void execute() {
-          connection->downloadFile_internal(fileName);
+          connection->downloadFile_internal(sourceFile, destinationFile);
         }
       private:
-        std::string fileName;
+        std::string sourceFile, destinationFile;
     };
 };
 

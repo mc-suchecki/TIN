@@ -50,8 +50,8 @@ void Connection::execute(const Command &command) {
   actionsQueue.push(new ExecuteAction(this,command));
 }
 
-void Connection::downloadFile(std::string fileName){
-  actionsQueue.push(new DownloadFileAction(this, fileName));
+void Connection::downloadFile(string remoteFile, string localFile){
+  actionsQueue.push(new DownloadFileAction(this, remoteFile, localFile));
 }
 
 void Connection::close() {
@@ -102,13 +102,14 @@ void Connection::execute_internal(const Command &command) {
     return;
 }
 
-void Connection::downloadFile_internal(string fileName){
+void Connection::downloadFile_internal(string remoteFile, string localFile){
   //send request for a file
   string fileRequest = MessageDictionary::sendFile;
-  fileRequest += fileName;
+  fileRequest += remoteFile;
 
   memset(buffer, 0, BUFFER_SIZE);
   strncpy(buffer, fileRequest.c_str(), BUFFER_SIZE); 
+  cout << "Request: " << buffer << endl;
   int n = write(sockfd, buffer, strlen(buffer));
   if(n<=0){
     string errMsg = "(" + IP_ADDRESS + ") Failed to send request for a file";
@@ -117,7 +118,7 @@ void Connection::downloadFile_internal(string fileName){
   }
 
   //receive file
-  if(!receiveAndSaveFile()){
+  if(!receiveAndSaveFile(localFile)){
     string errMsg = "(" + IP_ADDRESS + ") Failed to receive file";
     eventQueue->push(new CommandSendingFailedEvent(errMsg));
   }
@@ -176,7 +177,6 @@ bool Connection::authenticate(string password) {
   if(challenge.compare("0") == 0)
     return false;
 
-  cout<<"Received challenge: " + challenge << endl;
   if(!sendAuthenticationInfo(password,challenge))
     return false;
 
@@ -223,22 +223,19 @@ void Connection::getCurrTime(char *timeBuff, int n) {
   strftime(timeBuff, n*sizeof(char), "%Y-%m-%d_%X", localtm);
 }
 
-bool Connection::receiveAndSaveFile(){
-  //acquire current date and time
-  char timeBuff[80];
-  getCurrTime(timeBuff,80);
-
+bool Connection::receiveAndSaveFile(string localFile){
   // open a file of name IP_ADDRESS_DATE_TIME
   ofstream resultFile;
-  string filename = IP_ADDRESS+"_"+timeBuff;
-  resultFile.open(filename.c_str());
+  resultFile.open(localFile.c_str());
 
   int bytesRead;
   do {
     bytesRead = receiveMsg();
 
-    if(bytesRead==0)
+    if(bytesRead==0){
+      cout<<"Pobrano cały plik"<<endl;
       break; 
+    }
 
     if(bytesRead < 0){
       string errorMsg = "(" + IP_ADDRESS + ") Failed to receive the result file";
@@ -256,7 +253,7 @@ bool Connection::receiveAndSaveFile(){
   while(bytesRead>0);
 
   ++numOfResults;
-  eventQueue->push(new ActionDoneEvent(filename));
+  eventQueue->push(new ActionDoneEvent(localFile));
 
   resultFile.close();
   return true;
@@ -275,6 +272,5 @@ string Connection::getChallenge(){
   if(bytesReceived<0)
     return string("0");
     
-  cout<<"Received challenge(getChallenge): " << buffer << endl;
   return string(buffer);
 }

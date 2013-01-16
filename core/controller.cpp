@@ -230,7 +230,7 @@ GetFileEvent *getFileEvent = dynamic_cast<GetFileEvent *>(event);
   //find Connection with desired IP and send command
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
     if(getFileEvent->getAddress() == (*it)->getIPAddress()) {
-      (*it)->downloadFile(getFileEvent->getRemotePath());
+      (*it)->downloadFile(getFileEvent->getRemotePath(), getFileEvent->getLocalPath());
       logger->logEvent(getFileEvent);
       return;
     }

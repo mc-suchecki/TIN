@@ -175,13 +175,14 @@ void ConnectionHandler::sendFile(string &command)
 	string filePath = getFilePathFrom(command);
 	log("Received request: send file " + filePath);
 	std::ifstream fileToSend;
-	fileToSend.open(filePath.data());
+	fileToSend.open(filePath.c_str());
 	while (true)
 	{
 		int bytesRead = readFromFileToBuffer(fileToSend);
 		if (bytesRead == 0)
 			break;
 
+    cout << "Przesyłam: " << buffer << endl;
 		writeToOutputSocket(buffer, bytesRead);
 	}
 	log("Sent file: " + filePath);
@@ -228,6 +229,7 @@ void ConnectionHandler::setClientIP()
 
 void ConnectionHandler::readFromOutputSocketToBuffer(int numberOfBytes)
 {
+  bzero(buffer, bufferSize);
 	int bytesRead = read(outputSocket, buffer, numberOfBytes);
 	if (bytesRead < 0)
 		error("ERROR reading from socket");
