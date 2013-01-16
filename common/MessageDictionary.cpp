@@ -13,4 +13,5 @@ const std::string MessageDictionary::closeConnection = "@#$closeConnection$#@";
 
 const std::string MessageDictionary::passwordCorrect = "@#$passwordCorrect$#@";
 const std::string MessageDictionary::passwordIncorrect = "@#$passwordIncorrect$#@";
+const std::string MessageDictionary::endOfFile = "@#$endOfFile$#@";
 

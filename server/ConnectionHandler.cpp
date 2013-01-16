@@ -179,6 +179,8 @@ void ConnectionHandler::sendFile(const string &command)
 
 		writeToOutputSocket(buffer, bytesRead);
 	}
+	string message = MessageDictionary::endOfFile;
+	writeToOutputSocket( (char*)message.c_str(), message.length() );
 	log("Sent file: '" + filePath + "'");
 	fileToSend.close();
 }
