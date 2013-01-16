@@ -18,13 +18,12 @@
 #include "../include/eventQueue.hpp"
 #include "../include/events/connectionEvent.hpp"
 #include "../common/MessageDictionary.hpp"
+#include "../common/MD5.hpp"
 
 using namespace std;
 
 Connection::Connection(EventQueue * const evQ, IPAddress addr, PortsNr p):
   eventQueue(evQ), IP_ADDRESS(addr), PORTS_NUMBER(p){
-    //Logger *logger = Logger::getInstance(cout);
-    //logger->logDebugMessage("Created new connection object with address "+addr+" and port "+std::to_string(p));
     stopLoop = false;
     runThread = boost::thread(&Connection::run, this);
     sockfd = -1;
@@ -84,7 +83,6 @@ void Connection::close_internal() {
   strncpy(buffer, MessageDictionary::closeConnection.c_str(), BUFFER_SIZE); 
   int n = write(sockfd, buffer, strlen(buffer));
 
-  cout<<buffer<<endl;
   if(n < 0) {
     string errorMsg = "(" + IP_ADDRESS
       + ") Failed to send CLOSE_CONNECTION command to server";
@@ -137,17 +135,16 @@ bool Connection::sendCommand(const Command &command) {
   return true;
 }
 
-bool Connection::sendAuthenticationInfo(string password, string challange){
+bool Connection::sendAuthenticationInfo(string password, string challenge){
   string challPass = password;
-  challPass += challange;
-
-
+  challPass += challenge;
+  challPass = md5(challPass);
 
   memset(buffer, 0, BUFFER_SIZE);
-  strncpy(buffer, password.c_str(), BUFFER_SIZE); 
+  strncpy(buffer, challPass.c_str(), BUFFER_SIZE); 
+  cout<<"Hashed: " + string(buffer) << endl;
   int n = write(sockfd, buffer, strlen(buffer));
 
-  cout<<buffer<<endl;
   if(n < 0) {
     string errorMsg = "(" + IP_ADDRESS + ") Failed to write password to socket";
     eventQueue->push(new ConnectionFailedEvent(errorMsg));
@@ -158,11 +155,12 @@ bool Connection::sendAuthenticationInfo(string password, string challange){
 }
 
 bool Connection::authenticate(string password) {
-  std::string challange = getChallange();
-  if(challange.compare("0") == 0)
+  std::string challenge = getChallenge();
+  if(challenge.compare("0") == 0)
     return false;
 
-  if(!sendAuthenticationInfo(password,challange))
+  cout<<"Received challenge: " + challenge << endl;
+  if(!sendAuthenticationInfo(password,challenge))
     return false;
 
   //receive authentication response
@@ -170,7 +168,6 @@ bool Connection::authenticate(string password) {
   if(bytesReceived<0)
     return false; 
 
-  cout<<buffer;
   if(strcmp(buffer,MessageDictionary::passwordCorrect.c_str()) == 0)
     return true;
 
@@ -239,7 +236,7 @@ bool Connection::receiveAndSaveFile(){
       return false;
     }
   }
-  while(bytesRead>0);//FIXME How can I recognize the end of the transmission?
+  while(bytesRead>0);
 
   ++numOfResults;
   eventQueue->push(new ActionDoneEvent(filename));
@@ -248,7 +245,19 @@ bool Connection::receiveAndSaveFile(){
   return true;
 }
 
-string Connection::getChallange(){
- //TODO
- return string("0");
+string Connection::getChallenge(){
+  //send request for challenge
+  memset(buffer, 0, BUFFER_SIZE);
+  strncpy(buffer, MessageDictionary::sendChallenge.c_str(), BUFFER_SIZE); 
+  int bytesWritten = write(sockfd, buffer, strlen(buffer));
+  if(bytesWritten<=0)
+    return string("0");
+ 
+  //receive challenge
+  int bytesReceived = receiveMsg();
+  if(bytesReceived<0)
+    return string("0");
+    
+  cout<<"Received challenge(getChallenge): " << buffer << endl;
+  return string(buffer);
 }

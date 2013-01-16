@@ -91,12 +91,12 @@ class Connection {
 
     bool prepareSocket();
     bool authenticate(std::string password);
-    bool sendAuthenticationInfo(std::string password, std::string challange);
+    bool sendAuthenticationInfo(std::string password, std::string challenge);
     bool sendCommand(const Command &command);
     int receiveMsg();
     bool receiveAndSaveFile();
     void getCurrTime(char *timeBuff, int n);
-    std::string getChallange();
+    std::string getChallenge();
 
     //internal classes representing actions (design pattern: command)
     class Action {
