@@ -54,13 +54,13 @@ class ConnectionHandler
         bool receiveAndVerifyPassword();
         void recogizeAndExecuteCommand();
         bool isTheCommand(const string&, const string&);
-        void sendFile(string&);
-        string getFilePathFrom(string);
+        void sendFile(const string&);
+        string getFilePathFrom(const string&);
         void executeSystemCommand(const string&);
         int readFromFileToBuffer(std::ifstream&);
 
         void readFromOutputSocketToBuffer(int);
-        void writeToOutputSocket(void*, int);
+        void writeToOutputSocket(char*, int);
         void setClientIP();
         void log(const string &) const;
         void error(const char*);

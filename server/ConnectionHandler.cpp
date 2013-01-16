@@ -95,18 +95,14 @@ bool ConnectionHandler::receiveChallengeRequest()
 	readFromOutputSocketToBuffer(bufferSize);
 
 	if( isTheCommand(MessageDictionary::sendChallenge, (string)buffer) )
-	{
-		bzero(buffer, bufferSize);
 		return true;
-	}
-	bzero(buffer, bufferSize);
 	return false;
 }
 
 void ConnectionHandler::sendChallenge()
 {
 	string challenge = clientAuthenticator->getChallenge();
-	writeToOutputSocket( (void*)challenge.c_str(), challenge.length() );
+	writeToOutputSocket( (char*)challenge.c_str(), challenge.length() );
 	log("Challenge sent");
 }
 
@@ -118,14 +114,14 @@ bool ConnectionHandler::receiveAndVerifyPassword()
 	if(passwordCorrect)
 	{
 		string message = MessageDictionary::passwordCorrect;
-		writeToOutputSocket( (void*)message.c_str(), message.length() );
+		writeToOutputSocket( (char*)message.c_str(), message.length() );
 		log("Client verified");
 		return true;
 	}
 	else
 	{
 		string message = MessageDictionary::passwordIncorrect;
-		writeToOutputSocket( (void*)message.c_str(), message.length() );
+		writeToOutputSocket( (char*)message.c_str(), message.length() );
 		log("Client rejected (wrong password)");
 		return false;
 	}
@@ -147,9 +143,8 @@ void ConnectionHandler::recogizeAndExecuteCommand()
 	bzero(buffer, bufferSize);
 
 	if(isTheCommand(MessageDictionary::sendFile, command))
-	{
 		sendFile(command);
-	}
+
 	else if(isTheCommand(MessageDictionary::closeConnection, command))
 	{
 		log("Received request: close connection");
@@ -157,7 +152,7 @@ void ConnectionHandler::recogizeAndExecuteCommand()
 	}
 	else
 	{
-		log("Received command: " + (string)buffer);
+		log("Received command: " + command);
 		executeSystemCommand(command);
 	}
 }
@@ -169,11 +164,11 @@ bool ConnectionHandler::isTheCommand(const string &searchedString, const string 
 	return false;
 }
 
-void ConnectionHandler::sendFile(string &command)
+void ConnectionHandler::sendFile(const string &command)
 {
 	//TODO some security in case of wrong file name
 	string filePath = getFilePathFrom(command);
-	log("Received request: send file " + filePath);
+	log("Received request: send file '" + filePath + "'");
 	std::ifstream fileToSend;
 	fileToSend.open(filePath.c_str());
 	while (true)
@@ -182,18 +177,17 @@ void ConnectionHandler::sendFile(string &command)
 		if (bytesRead == 0)
 			break;
 
-    cout << "Przesyłam: " << buffer << endl;
 		writeToOutputSocket(buffer, bytesRead);
 	}
-	log("Sent file: " + filePath);
+	log("Sent file: '" + filePath + "'");
+	fileToSend.close();
 }
 
-string ConnectionHandler::getFilePathFrom(string command)
+string ConnectionHandler::getFilePathFrom(const string &command)
 {
 	int bytesToSkip = MessageDictionary::sendFile.size();
-	command += bytesToSkip;
-	log(" [TEST] filePath : " + command);	//TODO delete this, if all works
-	return command;
+	string newCommand = command.data() + bytesToSkip;
+	return newCommand;
 }
 
 void ConnectionHandler::executeSystemCommand(const string &command)
@@ -203,6 +197,7 @@ void ConnectionHandler::executeSystemCommand(const string &command)
 
 int ConnectionHandler::readFromFileToBuffer(std::ifstream &resultFile)
 {
+	bzero(buffer, bufferSize);
 	resultFile.read(buffer, bufferSize);
 	int bytesRead = resultFile.gcount();
 	if (bytesRead < 0)
@@ -229,7 +224,7 @@ void ConnectionHandler::setClientIP()
 
 void ConnectionHandler::readFromOutputSocketToBuffer(int numberOfBytes)
 {
-  bzero(buffer, bufferSize);
+	bzero(buffer, bufferSize);
 	int bytesRead = read(outputSocket, buffer, numberOfBytes);
 	if (bytesRead < 0)
 		error("ERROR reading from socket");
@@ -237,7 +232,7 @@ void ConnectionHandler::readFromOutputSocketToBuffer(int numberOfBytes)
 		error("ERROR socket empty");
 }
 
-void ConnectionHandler::writeToOutputSocket(void * message, int bytesToWrite)
+void ConnectionHandler::writeToOutputSocket(char *message, int bytesToWrite)
 {
 	void *bufferPointer = message;
 	while (bytesToWrite > 0)
