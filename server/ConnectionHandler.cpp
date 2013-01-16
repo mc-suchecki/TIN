@@ -138,7 +138,7 @@ void ConnectionHandler::receiveCommands()
 	{
 		readFromOutputSocketToBuffer(bufferSize);
 
-		log("Received command: " + buffer);
+		log("Received command: " + (string)buffer);
 		recogizeAndExecuteCommand();
 	}
 }
