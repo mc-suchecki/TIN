@@ -8,10 +8,12 @@ env = Environment(
 # defining source files list
 main = [ 'main.cpp' ]
 core = [
+  'ClientAuthenticator.cpp',
   'CommandExecutor.cpp',
   'ConnectionHandler.cpp',
   'Server.cpp',
-  '../common/MessageDictionary.cpp'
+  '../common/MessageDictionary.cpp',
+  '../common/MD5.cpp'
 ]
 
 # defining application ingredients

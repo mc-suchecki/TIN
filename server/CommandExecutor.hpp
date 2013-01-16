@@ -10,10 +10,12 @@
 #include "blockingQueue.hpp"
 #include <boost/thread.hpp>
 
+using std::string;
+
 class CommandExecutor
 {
 	public:
-		CommandExecutor(BlockingQueue<std::string>*, BlockingQueue<std::string>*);
+		CommandExecutor(BlockingQueue<string>*);
 		virtual ~CommandExecutor() {}
 		void start();
 		void join();
@@ -21,16 +23,10 @@ class CommandExecutor
 	private:
 		boost::thread commandExecutor;
 
-		BlockingQueue<std::string> * commandQueue;
-		BlockingQueue<std::string> * resultFileQueue;
-		int resultFilesCounter;
+		BlockingQueue<string> * commandQueue;
 
 		void watchForCommands();
-		void execute(const std::string*);
-		void sendResultFilesNumber();
-		void beginNewExecutionSession();
-		std::string* makeNewResultFileName();
-		void executeSystemCommand(const std::string*, const std::string*);
-		std::string makeSystemCommand(const std::string*, const std::string*);
+		void execute(const string*);
+		void log(const string &) const;
 };
 

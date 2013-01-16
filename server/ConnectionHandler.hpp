@@ -16,46 +16,53 @@
 #include <netinet/in.h>
 #include <boost/thread.hpp>
 #include "blockingQueue.hpp"
+#include "ClientAuthenticator.hpp"
 
-#define bufferSize 512
+#define bufferSize 2048
+
+using std::string;
 
 class ConnectionHandler
 {
     public:
-        ConnectionHandler(int port, BlockingQueue<std::string>*, BlockingQueue<std::string>*);
+        ConnectionHandler(int port, BlockingQueue<string>*, ClientAuthenticator*);
         virtual ~ConnectionHandler();
         void start();
         void join();
 
     private:
-        static const std::string password;
         char buffer[bufferSize];
         int mySocket, outputSocket, portNumber;
         socklen_t clientAddressLength;
         struct sockaddr_in serverAddress, clientAddress;
-        std::string clientIP;
+        string clientIP;
+        bool connectionOpened;
 
         boost::thread connectionHandler;
-
-        BlockingQueue<std::string> * commandQueue;
-        BlockingQueue<std::string> * resultFileQueue;
+        ClientAuthenticator * clientAuthenticator;
+        BlockingQueue<string> * commandQueue;
 
         void initializeMySocket();
-        void watchForClientRequests();
+        void watchForConnections();
         void initializeConnection();
         void receiveCommands();
-        void sendResultFiles();
         void closeConnection();
 
-        bool isPasswordCorrect();
-        bool verifyPasswordAndAnswer(char*);
-        int sendNumberOfResultFiles();
-        void waitForCommand(const std::string&);
-        void sendFile(std::string*);
-        int readFileToBuffer(std::ifstream&);
-        void writeBufferToOutputSocket(int);
-        void deleteResultFile(std::string*);
+        bool isClientVerified();
+        bool receiveChallengeRequest();
+        void sendChallenge();
+        bool receiveAndVerifyPassword();
+        void recogizeAndExecuteCommand();
+        bool isTheCommand(const string&, const string&);
+        void sendFile(string&);
+        string getFilePathFrom(string);
+        void executeSystemCommand(const string&);
+        int readFromFileToBuffer(std::ifstream&);
+
+        void readFromOutputSocketToBuffer(int);
+        void writeToOutputSocket(void*, int);
         void setClientIP();
+        void log(const string &) const;
         void error(const char*);
-	void fatalError(const char*);
+        void fatalError(const char*);
 };

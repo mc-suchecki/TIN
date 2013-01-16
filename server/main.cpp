@@ -9,17 +9,15 @@
 #include <stdlib.h>
 #include "Server.hpp"
 
-using namespace std;
-
 int main(int argc, char *argv[])
 {
-     if (argc < 2)
+     if (argc < 3)
      {
-         fprintf(stderr,"ERROR, no port provided\n");
+         std::cerr << "ERROR, invalid arguments! (proper call: server [port] [password]))" << std::endl;
          exit(1);
      }
 
-     Server server = Server(atoi(argv[1]));
+     Server server = Server(atoi(argv[1]), argv[2]);
      return 0;
 }
 

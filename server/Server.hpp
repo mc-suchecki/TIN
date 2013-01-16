@@ -6,6 +6,7 @@
  */
 #pragma once
 
+#include "ClientAuthenticator.hpp"
 #include "ConnectionHandler.hpp"
 #include "CommandExecutor.hpp"
 #include "blockingQueue.hpp"
@@ -14,12 +15,12 @@
 class Server
 {
 	public:
-		Server(int port);
+		Server(int port, std::string password);
 		virtual ~Server();
 	private:
+		ClientAuthenticator *clientAuthenticator;
 		ConnectionHandler *connectionHandler;
 		CommandExecutor * commandExecutor;
 		BlockingQueue<std::string> * commandQueue;
-		BlockingQueue<std::string> * resultFileQueue;
 };
 

@@ -7,16 +7,17 @@
 
 #include "Server.hpp"
 
+using std::string;
 
-Server::Server(int port)
+Server::Server(int port, string password)
 {
-	commandQueue = new BlockingQueue<std::string>;
-	resultFileQueue = new BlockingQueue<std::string>;
+	commandQueue = new BlockingQueue<string>;
+	clientAuthenticator = new ClientAuthenticator(password);
 
-	connectionHandler = new ConnectionHandler(port, commandQueue, resultFileQueue);
+	connectionHandler = new ConnectionHandler(port, commandQueue, clientAuthenticator);
 	connectionHandler->start();
 
-	commandExecutor = new CommandExecutor(commandQueue, resultFileQueue);
+	commandExecutor = new CommandExecutor(commandQueue);
 	commandExecutor->start();
 }
 
@@ -29,5 +30,4 @@ Server::~Server()
 	delete commandExecutor;
 
 	delete commandQueue;
-	delete resultFileQueue;
 }
