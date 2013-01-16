@@ -94,7 +94,7 @@ bool ConnectionHandler::receiveChallengeRequest()
 {
 	readFromOutputSocketToBuffer(bufferSize);
 
-	if( isTheCommand(MessageDictionary::closeConnection, (string)buffer) )
+	if( isTheCommand(MessageDictionary::sendChallenge, (string)buffer) )
 	{
 		bzero(buffer, bufferSize);
 		return true;
