@@ -227,19 +227,18 @@ bool Connection::receiveAndSaveFile(string localFile){
   ofstream resultFile;
   resultFile.open(localFile.c_str());
 
-  int bytesRead;
-  int i=0;
-  do {
-    cout<<++i<<" obieg"<<endl;
-    bytesRead = receiveMsg();
-    cout<<"Buffor: "<<buffer<<endl;
+  while(true){
+    int bytesRead = receiveMsg();
+    cout<<buffer<<endl;
+    cout<<string(buffer).length()<<endl;
+    cout<<string(MessageDictionary::endOfFile.c_str()).length()<<endl;
 
-    if(bytesRead==0){
-      cout<<"Pobrano cały plik"<<endl;
-      break; 
+    if(strcmp(buffer, MessageDictionary::endOfFile.c_str()) == 0){
+      cout<<"Koniec pliku"<<endl;
+      break;
     }
 
-    if(bytesRead < 0){
+    if(bytesRead <= 0){
       string errorMsg = "(" + IP_ADDRESS + ") Failed to receive the result file";
       eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
       return false;
@@ -252,8 +251,8 @@ bool Connection::receiveAndSaveFile(string localFile){
       return false;
     }
   }
-  while(bytesRead>0);
 
+  cout<<"Po wyjsciu z petli"<<endl;
   ++numOfResults;
   eventQueue->push(new ActionDoneEvent(localFile));
 
