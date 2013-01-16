@@ -103,7 +103,24 @@ void Connection::execute_internal(const Command &command) {
 }
 
 void Connection::downloadFile_internal(string fileName){
-  //TODO
+  //send request for a file
+  string fileRequest = MessageDictionary::sendFile;
+  fileRequest += fileName;
+
+  memset(buffer, 0, BUFFER_SIZE);
+  strncpy(buffer, fileRequest.c_str(), BUFFER_SIZE); 
+  int n = write(sockfd, buffer, strlen(buffer));
+  if(n<=0){
+    string errMsg = "(" + IP_ADDRESS + ") Failed to send request for a file";
+    eventQueue->push(new CommandSendingFailedEvent(errMsg));
+    return;
+  }
+
+  //receive file
+  if(!receiveAndSaveFile()){
+    string errMsg = "(" + IP_ADDRESS + ") Failed to receive file";
+    eventQueue->push(new CommandSendingFailedEvent(errMsg));
+  }
 }
 
 std::string Connection::getIPAddress() {
@@ -122,6 +139,7 @@ bool Connection::sendCommand(const Command &command) {
   command.serialize(serializedChunk);
   string commandsContent(serializedChunk);
 
+  memset(buffer,0,BUFFER_SIZE);
   strncpy(buffer, serializedChunk, BUFFER_SIZE); 
   int n = write(sockfd, buffer, strlen(buffer));
 
@@ -142,7 +160,6 @@ bool Connection::sendAuthenticationInfo(string password, string challenge){
 
   memset(buffer, 0, BUFFER_SIZE);
   strncpy(buffer, challPass.c_str(), BUFFER_SIZE); 
-  cout<<"Hashed: " + string(buffer) << endl;
   int n = write(sockfd, buffer, strlen(buffer));
 
   if(n < 0) {
