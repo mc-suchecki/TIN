@@ -132,6 +132,10 @@ void Controller::fillEventActionMap() {
   eventActionMap.insert(std::make_pair(&typeid(sendCommandEvent),
         &Controller::sendCommand));
 
+  GetFileEvent getFileEvent("","","");
+  eventActionMap.insert(std::make_pair(&typeid(getFileEvent),
+        &Controller::getFile));
+
   CancelAllEvent cancelAllEvent;
   eventActionMap.insert(std::make_pair(&typeid(cancelAllEvent),
         &Controller::cancelAll));
@@ -216,6 +220,21 @@ void Controller::sendCommand(Event *event) {
     new CommandSendingFailedEvent("Connection with IP: "+sendCommandEvent->getAddress()+" was not found!");
   logger->logEvent(errorEvent);
   delete errorEvent;
+}
+
+/** Method responsible for downloading the file */
+void Controller::getFile(Event *event){
+GetFileEvent *getFileEvent = dynamic_cast<GetFileEvent *>(event);
+  vector<Connection *>::iterator it;
+
+  //find Connection with desired IP and send command
+  for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
+    if(getFileEvent->getAddress() == (*it)->getIPAddress()) {
+      (*it)->downloadFile(getFileEvent->getRemotePath());
+      logger->logEvent(getFileEvent);
+      return;
+    }
+  }
 }
 
 /** Method responsible for cancelling all commands on one of the servers. */

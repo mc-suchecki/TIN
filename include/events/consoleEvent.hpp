@@ -61,6 +61,22 @@ class SendCommandEvent : public ConsoleEvent {
     std::string command;
 };
 
+class GetFileEvent : public ConsoleEvent {
+  public:
+    GetFileEvent(std::string address, std::string remotePath, std::string localPath)
+      : ConsoleEvent("Get file " + remotePath + " to " + localPath + "."),
+       address(address), remotePath(remotePath), localPath(localPath) {};
+    virtual ~GetFileEvent() {};
+    virtual std::string getMessage() {return message;};
+    std::string getAddress() {return address;};
+    std::string getRemotePath() {return remotePath;};
+    std::string getLocalPath() {return localPath;};
+  private:
+    std::string address;
+    std::string remotePath;
+    std::string localPath;
+};
+
 class CancelAllEvent : public ConsoleEvent {
   public:
     CancelAllEvent(std::string address = "")

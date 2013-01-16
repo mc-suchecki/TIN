@@ -30,7 +30,7 @@ vector<ConsoleEvent*> Parser::parse(string input){
   vector<string> passwords;
   vector<string> files;
   vector<int> ports;
-  string command;
+  string alias, command, remPath, locPath;
   result = qi::parse(
       input.begin(), input.end(), 
       (
@@ -68,6 +68,15 @@ vector<ConsoleEvent*> Parser::parse(string input){
          >> qi::as_string[+(qi::char_)][phoenix::ref(command) = _1]
          )
        | (
+         lit("get")[phoenix::ref(action) = "get"]
+         >> " "
+         >> qi::as_string[+(qi::char_ - " ")][phoenix::ref(alias) = _1]
+         >> " "
+         >> qi::as_string[+(qi::char_ - " ")][phoenix::ref(remPath) = _1]
+         >>" "
+         >> qi::as_string[+(qi::char_ - " ")][phoenix::ref(locPath) = _1]
+         )
+       | (
            lit("exit")[phoenix::ref(action) = "exit"]
          )
        | (
@@ -101,6 +110,9 @@ vector<ConsoleEvent*> Parser::parse(string input){
       for(unsigned int i = 0; i < command_aliases.size();++i)
         retVector.push_back(new SendCommandEvent(aliases[command_aliases[i]], command));
     }
+    else if(action == "get"){
+      retVector.push_back(new GetFileEvent(aliases[alias], remPath, locPath));
+    }
     else if(action == "run"){
       ifstream inputFile;
       for(unsigned int i = 0; i < files.size(); ++i){
@@ -130,8 +142,8 @@ vector<ConsoleEvent*> Parser::parse(string input){
       cout << "Available commands:" << std::endl;
       cout << "connect - extablish connection with server" << std::endl;
       cout << "  examples:" << std::endl;
-      cout << "    connect 123.123.123.123 alias 1500" << std::endl;
-      cout << "    connect 123.123.123.123 alias 1500, 134.134.134.134 alias2 1500" << std::endl;
+      cout << "    connect 123.123.123.123 alias 1500 password" << std::endl;
+      cout << "    connect 123.123.123.123 alias 1500 password, 134.134.134.134 alias2 1500 password" << std::endl;
       cout << "send - send command to connected server" << std::endl;
       cout << "  examples:" << std::endl;
       cout << "    send alias command_to_execute" << std::endl;
@@ -142,7 +154,10 @@ vector<ConsoleEvent*> Parser::parse(string input){
       cout << "    run ./file/path ./file/path2" << std::endl;
       cout << "  file contents:" << std::endl;
       cout << "    command to execute 1" << std::endl;
-      cout << "    command to execute 2" << std::endl << std::endl;
+      cout << "    command to execute 2" << std::endl;
+      cout << "get - get file from server" << endl;
+      cout << "  examples:"<<endl;
+      cout << "    get alias remote/file/path local/file/path"<< std::endl;
       cout << "help - display this help prompt" << std::endl;
       cout << "exit - shutdown program" << std::endl;
     }

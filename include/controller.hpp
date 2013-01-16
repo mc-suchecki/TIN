@@ -44,6 +44,7 @@ class Controller {
     void createConnection(Event *event);
     void close(Event *event);
     void sendCommand(Event *event);
+    void getFile(Event *event);
     void cancelAll(Event *event);
 
     //methods handling particular connection events
