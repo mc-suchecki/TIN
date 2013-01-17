@@ -229,14 +229,6 @@ bool Connection::receiveAndSaveFile(string localFile){
 
   while(true){
     int bytesRead = receiveMsg();
-    cout<<buffer<<endl;
-    cout<<string(buffer).length()<<endl;
-    cout<<string(MessageDictionary::endOfFile.c_str()).length()<<endl;
-
-    if(strcmp(buffer, MessageDictionary::endOfFile.c_str()) == 0){
-      cout<<"Koniec pliku"<<endl;
-      break;
-    }
 
     if(bytesRead <= 0){
       string errorMsg = "(" + IP_ADDRESS + ") Failed to receive the result file";
@@ -244,6 +236,17 @@ bool Connection::receiveAndSaveFile(string localFile){
       return false;
     }
 
+    string recvMsg = string(buffer);
+    if(recvMsg.find(MessageDictionary::endOfFile) != string::npos){
+      resultFile.write(buffer, recvMsg.length()- MessageDictionary::endOfFile.length());
+      if(resultFile.fail()){
+        string errorMsg = "(" + IP_ADDRESS + ") Failed to save received file";
+        eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
+        return false;
+      }
+
+      break;
+    }
     resultFile.write(buffer, bytesRead);
     if(resultFile.fail()){
       string errorMsg = "(" + IP_ADDRESS + ") Failed to save received file";
@@ -252,7 +255,6 @@ bool Connection::receiveAndSaveFile(string localFile){
     }
   }
 
-  cout<<"Po wyjsciu z petli"<<endl;
   ++numOfResults;
   eventQueue->push(new ActionDoneEvent(localFile));
 
