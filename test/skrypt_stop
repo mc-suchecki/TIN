@@ -1,0 +1,4 @@
+connect 127.0.0.1 ja
+send ja killall tcpdump
+get ja plik_wynikowy test/plik_pobrany
+close ja
