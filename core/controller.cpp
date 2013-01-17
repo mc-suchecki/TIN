@@ -36,13 +36,12 @@ bool Controller::handleConfig(int argc, char * argv[]){
   try {
     po::options_description genericOptions("Generic options");
     genericOptions.add_options()
-      ("help", "help message")
-      ("version", "version")
+      ("help,h", "help message")
+      ("version,v", "version")
       ;
     po::options_description configOptions("Configuration");
     configOptions.add_options()
-      ("port,p", po::value<int>(), "default port")
-      ("file,f", po::value<string>(), "script file to run")
+      ("file,f", po::value<string>(), "script file to run (written in the syntax of this program)")
       ("config,c", po::value<string>(), "configuration file")
       ("debug,d", po::value<int>(), "debug level: 0 - none, 1 - events, 2 - all")
       ("logfile,l", po::value<string>(), "log file")
@@ -71,9 +70,6 @@ bool Controller::handleConfig(int argc, char * argv[]){
       cout << "Version: 0.1"<< endl;
       return false;
     }
-
-    if(vm.count("port"))
-      config->setPort(vm["port"].as<int>());
 
     if(vm.count("debug"))
       config->setDebug(vm["debug"].as<int>());
@@ -173,7 +169,6 @@ void Controller::createConnection(Event *event) {
 
   //acquire appropriate port
   int port = createConnectionEvent->getPort();
-  if(port == 0) port = config->getPort();
 
   aliases[createConnectionEvent->getAlias()] = createConnectionEvent->getAddress();
   //create connection

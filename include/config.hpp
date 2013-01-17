@@ -11,10 +11,6 @@ class Config{
     //Maciej Suchecki lubi to.
     static Config * getInstance();
 
-    // port
-    void setPort(int port){this->port = port;}
-    int getPort(){return port;}
-
     // debug level
     void setDebug(int debug){this->debug = debug;}
     int getDebug(){return debug;}
@@ -35,7 +31,6 @@ class Config{
 
     static Config * instance;
 
-    int port;
     int debug;
     std::string logFile;
     std::string scriptFile;

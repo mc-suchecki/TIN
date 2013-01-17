@@ -14,7 +14,6 @@ return instance;
 /// constructor with default values
 Config::Config(){
   // put default values here
-  port = 777;
   debug = 0;
   logFile = "no";
   scriptFile = "";

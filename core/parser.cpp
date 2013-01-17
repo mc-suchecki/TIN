@@ -147,7 +147,7 @@ vector<ConsoleEvent*> Parser::parse(string input){
       cout << "  examples:" << std::endl;
       cout << "    send alias command_to_execute" << std::endl;
       cout << "    send alias, alias command_to_execute" << std::endl;
-      cout << "run - run commands from file"<< std::endl;
+      cout << "run - run commands (written in the syntax of this program) from file"<< std::endl;
       cout << "  examples:" << std::endl;
       cout << "    run ./file/path" << std::endl;
       cout << "    run ./file/path ./file/path2" << std::endl;
@@ -157,6 +157,9 @@ vector<ConsoleEvent*> Parser::parse(string input){
       cout << "get - get file from server" << endl;
       cout << "  examples:"<<endl;
       cout << "    get alias remote/file/path local/file/path"<< std::endl;
+      cout << "close - closes connection" << endl;
+      cout << "  examples:"<<endl;
+      cout << "    close alias"<<endl;
       cout << "help - display this help prompt" << std::endl;
       cout << "exit - shutdown program" << std::endl;
     }
