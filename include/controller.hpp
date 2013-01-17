@@ -30,6 +30,9 @@ class Controller {
     Logger *logger;
     Config *config;
 
+    //a map for storing aliases
+    std::map<std::string,std::string> aliases;
+
     //vector of active connections
     std::vector<Connection *> activeConnections;
 

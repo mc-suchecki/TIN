@@ -175,6 +175,7 @@ void Controller::createConnection(Event *event) {
   int port = createConnectionEvent->getPort();
   if(port == 0) port = config->getPort();
 
+  aliases[createConnectionEvent->getAlias()] = createConnectionEvent->getAddress();
   //create connection
   Connection *newConnection =
     new Connection(eventQueue, createConnectionEvent->getAddress(), port);
@@ -189,9 +190,10 @@ void Controller::close(Event *event) {
   CloseEvent *closeEvent = dynamic_cast<CloseEvent *>(event);
   vector<Connection *>::iterator it;
 
+  string address = aliases[closeEvent->getAlias()];
   //find Connection with desired IP and send command
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
-    if(closeEvent->getAddress() == (*it)->getIPAddress()) {
+    if(address == (*it)->getIPAddress()) {
       (*it)->close();
       logger->logEvent(closeEvent);
       return;
@@ -205,9 +207,10 @@ void Controller::sendCommand(Event *event) {
   SendCommandEvent *sendCommandEvent = dynamic_cast<SendCommandEvent *>(event);
   vector<Connection *>::iterator it;
 
+  string address = aliases[sendCommandEvent->getAlias()];
   //find Connection with desired IP and send command
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
-    if(sendCommandEvent->getAddress() == (*it)->getIPAddress()) {
+    if(address == (*it)->getIPAddress()) {
       (*it)->execute(sendCommandEvent->getCommand());
       logger->logEvent(sendCommandEvent);
       return;
@@ -216,7 +219,7 @@ void Controller::sendCommand(Event *event) {
 
   //desired Connection not found - prompt user
   CommandSendingFailedEvent *errorEvent =
-    new CommandSendingFailedEvent("", "Connection with IP: " + sendCommandEvent->getAddress() + " was not found!");
+    new CommandSendingFailedEvent("", "Connection with IP: " + address + " was not found!");
   logger->logEvent(errorEvent);
   delete errorEvent;
 }
@@ -226,9 +229,10 @@ void Controller::getFile(Event *event) {
   GetFileEvent *getFileEvent = dynamic_cast<GetFileEvent *>(event);
   vector<Connection *>::iterator it;
 
+  string address = aliases[getFileEvent->getAlias()];
   //find Connection with desired IP and send command
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
-    if(getFileEvent->getAddress() == (*it)->getIPAddress()) {
+    if(address == (*it)->getIPAddress()) {
       (*it)->downloadFile(getFileEvent->getRemotePath(), getFileEvent->getLocalPath());
       logger->logEvent(getFileEvent);
       return;
@@ -241,9 +245,10 @@ void Controller::cancelAll(Event *event) {
   CancelAllEvent *cancelAllEvent = dynamic_cast<CancelAllEvent *>(event);
   vector<Connection *>::iterator it;
 
+  string address = aliases[cancelAllEvent->getAlias()];
   //find Connection with desired IP and cancel his commands
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
-    if(cancelAllEvent->getAddress() == (*it)->getIPAddress()) {
+    if(address == (*it)->getIPAddress()) {
       (*it)->close(); //FIXME quickfix: killAll->close; killAll doesn't exist
       logger->logEvent(cancelAllEvent);
       return;

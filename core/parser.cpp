@@ -102,16 +102,15 @@ vector<ConsoleEvent*> Parser::parse(string input){
   if(result){
     if(action == "connect"){
       for(unsigned int i = 0; i < addresses.size();++i){
-        retVector.push_back(new CreateConnectionEvent(addresses[i], ports[i], passwords[i]));
-        aliases[command_aliases[i]]=addresses[i];
+        retVector.push_back(new CreateConnectionEvent(addresses[i], ports[i], command_aliases[i], passwords[i]));
       }
     }
     else if(action == "send"){
       for(unsigned int i = 0; i < command_aliases.size();++i)
-        retVector.push_back(new SendCommandEvent(aliases[command_aliases[i]], command));
+        retVector.push_back(new SendCommandEvent(command_aliases[i], command));
     }
     else if(action == "get"){
-      retVector.push_back(new GetFileEvent(aliases[alias], remPath, locPath));
+      retVector.push_back(new GetFileEvent(alias, remPath, locPath));
     }
     else if(action == "run"){
       ifstream inputFile;
@@ -133,7 +132,7 @@ vector<ConsoleEvent*> Parser::parse(string input){
       }
     }
     else if(action == "close"){
-      retVector.push_back(new CloseEvent(aliases[command_aliases[0]]));
+      retVector.push_back(new CloseEvent(command_aliases[0]));
     }
     else if(action == "exit"){
       exit(0);
