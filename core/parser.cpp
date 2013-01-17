@@ -27,33 +27,25 @@ vector<ConsoleEvent*> Parser::parse(string input){
   string action;
   vector<string> command_aliases;
   vector<string> addresses;
-  vector<string> passwords;
   vector<string> files;
-  vector<int> ports;
-  string alias, command, remPath, locPath;
+  string alias, command, remPath, locPath, address;
+  string password = "";
+  int port = 0;
   result = qi::parse(
       input.begin(), input.end(), 
       (
        (
         lit("connect")[phoenix::ref(action) = "connect"]
         >> " "
-        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(addresses), _1)]
+        >> qi::as_string[+(qi::char_ - " ")][phoenix::ref(address) = _1]
         >> " "
-        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(command_aliases),_1)]
-        >> " "
-        >> (qi::int_)[push_back(phoenix::ref(ports), _1)]
-        >> " "
-        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(passwords),_1)]
-        >> *(
-          ", "
-          >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(addresses), _1)]
-          >> " "
-          >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(command_aliases),_1)]
-          >> " "
-          >> (qi::int_)[push_back(phoenix::ref(ports), _1)]
-        >> " "
-        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(passwords),_1)]
+        >> qi::as_string[+(qi::char_ - " ")][phoenix::ref(alias) = _1]
+        >> *(" "
+          >> (qi::int_)[phoenix::ref(port) = _1]
           )
+        >> *(" "
+          >> qi::as_string[+(qi::char_ - " ")][phoenix::ref(password) = _1]
+        )
        )
 
        | (
@@ -101,10 +93,8 @@ vector<ConsoleEvent*> Parser::parse(string input){
 
   if(result){
     if(action == "connect"){
-      for(unsigned int i = 0; i < addresses.size();++i){
-        retVector.push_back(new CreateConnectionEvent(addresses[i], ports[i], command_aliases[i], passwords[i]));
+        retVector.push_back(new CreateConnectionEvent(address, port, alias, password));
       }
-    }
     else if(action == "send"){
       for(unsigned int i = 0; i < command_aliases.size();++i)
         retVector.push_back(new SendCommandEvent(command_aliases[i], command));
@@ -141,8 +131,7 @@ vector<ConsoleEvent*> Parser::parse(string input){
       cout << "Available commands:" << std::endl;
       cout << "connect - extablish connection with server" << std::endl;
       cout << "  examples:" << std::endl;
-      cout << "    connect 123.123.123.123 alias 1500 password" << std::endl;
-      cout << "    connect 123.123.123.123 alias 1500 password, 134.134.134.134 alias2 1500 password" << std::endl;
+      cout << "    connect 123.123.123.123 alias [1500] [password]" << std::endl;
       cout << "send - send command to connected server" << std::endl;
       cout << "  examples:" << std::endl;
       cout << "    send alias command_to_execute" << std::endl;
