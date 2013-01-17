@@ -48,5 +48,6 @@ class Controller {
     void cancelAll(Event *event);
 
     //methods handling particular connection events
+    void removeConnection(Event *event);
     void logMessage(Event *event);
 };

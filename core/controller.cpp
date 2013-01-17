@@ -147,7 +147,7 @@ void Controller::fillEventActionMap() {
 
   ConnectionFailedEvent connectionFailedEvent;
   eventActionMap.insert(std::make_pair(&typeid(connectionFailedEvent),
-        &Controller::logMessage));
+        &Controller::removeConnection));
 
   CommandSentEvent commandSentEvent;
   eventActionMap.insert(std::make_pair(&typeid(commandSentEvent),
@@ -184,10 +184,9 @@ void Controller::createConnection(Event *event) {
   logger->logEvent(createConnectionEvent);
 }
 
-void Controller::close(Event *event){
-  CloseEvent *closeEvent =
-    dynamic_cast<CloseEvent *>(event);
-
+/** Method responsible for ? */
+void Controller::close(Event *event) {
+  CloseEvent *closeEvent = dynamic_cast<CloseEvent *>(event);
   vector<Connection *>::iterator it;
 
   //find Connection with desired IP and send command
@@ -217,14 +216,14 @@ void Controller::sendCommand(Event *event) {
 
   //desired Connection not found - prompt user
   CommandSendingFailedEvent *errorEvent =
-    new CommandSendingFailedEvent("Connection with IP: "+sendCommandEvent->getAddress()+" was not found!");
+    new CommandSendingFailedEvent("", "Connection with IP: " + sendCommandEvent->getAddress() + " was not found!");
   logger->logEvent(errorEvent);
   delete errorEvent;
 }
 
-/** Method responsible for downloading the file */
-void Controller::getFile(Event *event){
-GetFileEvent *getFileEvent = dynamic_cast<GetFileEvent *>(event);
+/** Method responsible for downloading the file. */
+void Controller::getFile(Event *event) {
+  GetFileEvent *getFileEvent = dynamic_cast<GetFileEvent *>(event);
   vector<Connection *>::iterator it;
 
   //find Connection with desired IP and send command
@@ -253,7 +252,7 @@ void Controller::cancelAll(Event *event) {
 
   //desired Connection not found - prompt user
   CommandSendingFailedEvent *errorEvent =
-    new CommandSendingFailedEvent("Connection with this IP was not found!");
+    new CommandSendingFailedEvent("", "Connection with this IP was not found!");
   logger->logEvent(errorEvent);
   delete errorEvent;
 }
@@ -263,3 +262,28 @@ void Controller::logMessage(Event *event) {
   ConnectionEvent *connectionEvent = dynamic_cast<ConnectionEvent *>(event);
   logger->logEvent(connectionEvent);
 }
+
+/** Method responsible for deleting Connection object after connection failure. */
+void Controller::removeConnection(Event *event) {
+  ConnectionFailedEvent *connectionFailedEvent = dynamic_cast<ConnectionFailedEvent *>(event);
+  vector<Connection *>::iterator it;
+  
+  //logging event
+  logger->logEvent(connectionFailedEvent);
+
+  std::cout << "DELETING CONNECTION WITH IP" << connectionFailedEvent->getIPAddress() << std::endl;
+
+  //find Connection which sent event and delete it
+  for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
+  std::cout << "FOUND CONNECTION WITH IP" << (*it)->getIPAddress() << std::endl;
+    if(connectionFailedEvent->getIPAddress() == (*it)->getIPAddress()) {
+
+  std::cout << "LOLZ DELETING" << (*it)->getIPAddress() << std::endl;
+      activeConnections.erase(it);
+      delete *it;
+      return;
+    }
+  }
+}
+
+
