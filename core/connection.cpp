@@ -241,7 +241,6 @@ bool Connection::receiveAndSaveFile(string localFile){
       resultFile.write(buffer, recvMsg.length()- MessageDictionary::endOfFile.length());
       if(resultFile.fail()){
         string errorMsg = "(" + IP_ADDRESS + ") Failed to save received file";
-        void removeConnection(Event *event);
         eventQueue->push(new ReceivingResultsFailureEvent(IP_ADDRESS, errorMsg));
         return false;
       }

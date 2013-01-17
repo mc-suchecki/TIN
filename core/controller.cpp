@@ -271,14 +271,9 @@ void Controller::removeConnection(Event *event) {
   //logging event
   logger->logEvent(connectionFailedEvent);
 
-  std::cout << "DELETING CONNECTION WITH IP" << connectionFailedEvent->getIPAddress() << std::endl;
-
   //find Connection which sent event and delete it
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
-  std::cout << "FOUND CONNECTION WITH IP" << (*it)->getIPAddress() << std::endl;
     if(connectionFailedEvent->getIPAddress() == (*it)->getIPAddress()) {
-
-  std::cout << "LOLZ DELETING" << (*it)->getIPAddress() << std::endl;
       activeConnections.erase(it);
       delete *it;
       return;
