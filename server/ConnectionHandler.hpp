@@ -8,6 +8,7 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -55,6 +56,7 @@ class ConnectionHandler
         void recogizeAndExecuteCommand();
         bool isTheCommand(const string&, const string&);
         void sendFile(const string&);
+        void sendFileSize(uint);
         std::ifstream::pos_type filesize(const char*);
         string getFilePathFrom(const string&);
         void executeSystemCommand(const string&);
