@@ -12,5 +12,4 @@ class Parser{
     ~Parser();
     std::vector<ConsoleEvent*> parse(std::string);
   private:
-    std::map<std::string,std::string> aliases;
 };

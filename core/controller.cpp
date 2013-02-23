@@ -36,13 +36,14 @@ bool Controller::handleConfig(int argc, char * argv[]){
   try {
     po::options_description genericOptions("Generic options");
     genericOptions.add_options()
-      ("help", "help message")
-      ("version", "version")
+      ("help,h", "help message")
+      ("version,v", "version")
       ;
     po::options_description configOptions("Configuration");
     configOptions.add_options()
       ("port,p", po::value<int>(), "default port")
-      ("file,f", po::value<string>(), "script file to run")
+      ("pass,s", po::value<string>(), "default password")
+      ("file,f", po::value<string>(), "script file to run (written in the syntax of this program)")
       ("config,c", po::value<string>(), "configuration file")
       ("debug,d", po::value<int>(), "debug level: 0 - none, 1 - events, 2 - all")
       ("logfile,l", po::value<string>(), "log file")
@@ -74,6 +75,9 @@ bool Controller::handleConfig(int argc, char * argv[]){
 
     if(vm.count("port"))
       config->setPort(vm["port"].as<int>());
+
+    if(vm.count("pass"))
+      config->setPassword(vm["pass"].as<string>());
 
     if(vm.count("debug"))
       config->setDebug(vm["debug"].as<int>());
@@ -147,7 +151,7 @@ void Controller::fillEventActionMap() {
 
   ConnectionFailedEvent connectionFailedEvent;
   eventActionMap.insert(std::make_pair(&typeid(connectionFailedEvent),
-        &Controller::logMessage));
+        &Controller::removeConnection));
 
   CommandSentEvent commandSentEvent;
   eventActionMap.insert(std::make_pair(&typeid(commandSentEvent),
@@ -173,26 +177,31 @@ void Controller::createConnection(Event *event) {
 
   //acquire appropriate port
   int port = createConnectionEvent->getPort();
-  if(port == 0) port = config->getPort();
+  if(port == 0)
+    port = config->getPort();
+  string password = createConnectionEvent->getPassword();
+  if(password == "")
+    password = config->getPassword();
 
+  aliases[createConnectionEvent->getAlias()] = createConnectionEvent->getAddress();
   //create connection
   Connection *newConnection =
     new Connection(eventQueue, createConnectionEvent->getAddress(), port);
-  newConnection->init(createConnectionEvent->getPassword()); 
+  newConnection->init(password); 
   activeConnections.push_back(newConnection);
 
   logger->logEvent(createConnectionEvent);
 }
 
-void Controller::close(Event *event){
-  CloseEvent *closeEvent =
-    dynamic_cast<CloseEvent *>(event);
-
+/** Method responsible for ? */
+void Controller::close(Event *event) {
+  CloseEvent *closeEvent = dynamic_cast<CloseEvent *>(event);
   vector<Connection *>::iterator it;
 
+  string address = aliases[closeEvent->getAlias()];
   //find Connection with desired IP and send command
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
-    if(closeEvent->getAddress() == (*it)->getIPAddress()) {
+    if(address == (*it)->getIPAddress()) {
       (*it)->close();
       logger->logEvent(closeEvent);
       return;
@@ -206,9 +215,10 @@ void Controller::sendCommand(Event *event) {
   SendCommandEvent *sendCommandEvent = dynamic_cast<SendCommandEvent *>(event);
   vector<Connection *>::iterator it;
 
+  string address = aliases[sendCommandEvent->getAlias()];
   //find Connection with desired IP and send command
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
-    if(sendCommandEvent->getAddress() == (*it)->getIPAddress()) {
+    if(address == (*it)->getIPAddress()) {
       (*it)->execute(sendCommandEvent->getCommand());
       logger->logEvent(sendCommandEvent);
       return;
@@ -217,19 +227,20 @@ void Controller::sendCommand(Event *event) {
 
   //desired Connection not found - prompt user
   CommandSendingFailedEvent *errorEvent =
-    new CommandSendingFailedEvent("Connection with IP: "+sendCommandEvent->getAddress()+" was not found!");
+    new CommandSendingFailedEvent("", "Connection with IP: " + address + " was not found!");
   logger->logEvent(errorEvent);
   delete errorEvent;
 }
 
-/** Method responsible for downloading the file */
-void Controller::getFile(Event *event){
-GetFileEvent *getFileEvent = dynamic_cast<GetFileEvent *>(event);
+/** Method responsible for downloading the file. */
+void Controller::getFile(Event *event) {
+  GetFileEvent *getFileEvent = dynamic_cast<GetFileEvent *>(event);
   vector<Connection *>::iterator it;
 
+  string address = aliases[getFileEvent->getAlias()];
   //find Connection with desired IP and send command
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
-    if(getFileEvent->getAddress() == (*it)->getIPAddress()) {
+    if(address == (*it)->getIPAddress()) {
       (*it)->downloadFile(getFileEvent->getRemotePath(), getFileEvent->getLocalPath());
       logger->logEvent(getFileEvent);
       return;
@@ -242,9 +253,10 @@ void Controller::cancelAll(Event *event) {
   CancelAllEvent *cancelAllEvent = dynamic_cast<CancelAllEvent *>(event);
   vector<Connection *>::iterator it;
 
+  string address = aliases[cancelAllEvent->getAlias()];
   //find Connection with desired IP and cancel his commands
   for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
-    if(cancelAllEvent->getAddress() == (*it)->getIPAddress()) {
+    if(address == (*it)->getIPAddress()) {
       (*it)->close(); //FIXME quickfix: killAll->close; killAll doesn't exist
       logger->logEvent(cancelAllEvent);
       return;
@@ -253,7 +265,7 @@ void Controller::cancelAll(Event *event) {
 
   //desired Connection not found - prompt user
   CommandSendingFailedEvent *errorEvent =
-    new CommandSendingFailedEvent("Connection with this IP was not found!");
+    new CommandSendingFailedEvent("", "Connection with this IP was not found!");
   logger->logEvent(errorEvent);
   delete errorEvent;
 }
@@ -263,3 +275,23 @@ void Controller::logMessage(Event *event) {
   ConnectionEvent *connectionEvent = dynamic_cast<ConnectionEvent *>(event);
   logger->logEvent(connectionEvent);
 }
+
+/** Method responsible for deleting Connection object after connection failure. */
+void Controller::removeConnection(Event *event) {
+  ConnectionFailedEvent *connectionFailedEvent = dynamic_cast<ConnectionFailedEvent *>(event);
+  vector<Connection *>::iterator it;
+  
+  //logging event
+  logger->logEvent(connectionFailedEvent);
+
+  //find Connection which sent event and delete it
+  for(it = activeConnections.begin(); it != activeConnections.end(); ++it) {
+    if(connectionFailedEvent->getIPAddress() == (*it)->getIPAddress()) {
+      activeConnections.erase(it);
+      delete *it;
+      return;
+    }
+  }
+}
+
+

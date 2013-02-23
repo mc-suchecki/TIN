@@ -64,16 +64,16 @@ void Connection::init_internal(string password) {
 
   if(connect(sockfd, (struct sockaddr *)&servAddr, sizeof(servAddr)) < 0) {
     string errorMsg = "Failed to connect to remote server";
-    eventQueue->push(new ConnectionFailedEvent(errorMsg));
+    eventQueue->push(new ConnectionFailedEvent(IP_ADDRESS, errorMsg));
     return;
   }
 
   if(authenticate(password))
-    eventQueue->push(new ConnectionEstablishedEvent());
+    eventQueue->push(new ConnectionEstablishedEvent(IP_ADDRESS));
 
   else {
     string errorMsg = "Authentication failure";
-    eventQueue->push(new ConnectionFailedEvent(errorMsg));
+    eventQueue->push(new ConnectionFailedEvent(IP_ADDRESS, errorMsg));
     sockfd = -1;
   }
 }
@@ -87,14 +87,14 @@ void Connection::close_internal() {
     string errorMsg = "(" + IP_ADDRESS
       + ") Failed to send CLOSE_CONNECTION command to server";
 
-    eventQueue->push(new ConnectionFailedEvent(errorMsg));
+    eventQueue->push(new ConnectionFailedEvent(IP_ADDRESS, errorMsg));
   }
 }
 
 void Connection::execute_internal(const Command &command) {
   if(sockfd < 0){
     string errMsg = "(" + IP_ADDRESS + ") Cannot execute command on uninitialized connection";
-    eventQueue->push(new CommandSendingFailedEvent(errMsg));
+    eventQueue->push(new CommandSendingFailedEvent(IP_ADDRESS, errMsg));
     return;
   }
 
@@ -112,14 +112,14 @@ void Connection::downloadFile_internal(string remoteFile, string localFile){
   int n = write(sockfd, buffer, strlen(buffer));
   if(n<=0){
     string errMsg = "(" + IP_ADDRESS + ") Failed to send request for a file";
-    eventQueue->push(new CommandSendingFailedEvent(errMsg));
+    eventQueue->push(new CommandSendingFailedEvent(IP_ADDRESS, errMsg));
     return;
   }
 
   //receive file
   if(!receiveAndSaveFile(localFile)){
     string errMsg = "(" + IP_ADDRESS + ") Failed to receive file";
-    eventQueue->push(new CommandSendingFailedEvent(errMsg));
+    eventQueue->push(new CommandSendingFailedEvent(IP_ADDRESS, errMsg));
   }
 }
 
@@ -145,11 +145,11 @@ bool Connection::sendCommand(const Command &command) {
 
   if(n < 0) {
     string errMsg = "(" + IP_ADDRESS + ") Failed to write to socket";
-    eventQueue->push(new CommandSendingFailedEvent(errMsg));
+    eventQueue->push(new CommandSendingFailedEvent(IP_ADDRESS, errMsg));
     return false;
   }
 
-  eventQueue->push(new CommandSentEvent());
+  eventQueue->push(new CommandSentEvent(IP_ADDRESS));
   return true;
 }
 
@@ -164,7 +164,7 @@ bool Connection::sendAuthenticationInfo(string password, string challenge){
 
   if(n < 0) {
     string errorMsg = "(" + IP_ADDRESS + ") Failed to write password to socket";
-    eventQueue->push(new ConnectionFailedEvent(errorMsg));
+    eventQueue->push(new ConnectionFailedEvent(IP_ADDRESS, errorMsg));
     return false;
   }
 
@@ -193,7 +193,7 @@ bool Connection::authenticate(string password) {
 bool Connection::prepareSocket(){
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if(sockfd < 0) {
-    eventQueue->push(new ConnectionFailedEvent("Failed to open socket"));
+    eventQueue->push(new ConnectionFailedEvent(IP_ADDRESS, "Failed to open socket"));
     return false;
   }
 
@@ -203,7 +203,7 @@ bool Connection::prepareSocket(){
 
   if(inet_pton(AF_INET, IP_ADDRESS.c_str(), &servAddr.sin_addr)<=0) {
     string errorMsg = "Failed to convert given IP "+IP_ADDRESS+" address to native type.";
-    eventQueue->push(new ConnectionFailedEvent(errorMsg));
+    eventQueue->push(new ConnectionFailedEvent(IP_ADDRESS, errorMsg));
     return false;
   }
 
@@ -232,7 +232,7 @@ bool Connection::receiveAndSaveFile(string localFile){
 
     if(bytesRead <= 0){
       string errorMsg = "(" + IP_ADDRESS + ") Failed to receive the result file";
-      eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
+      eventQueue->push(new ReceivingResultsFailureEvent(IP_ADDRESS, errorMsg));
       return false;
     }
 
@@ -241,7 +241,7 @@ bool Connection::receiveAndSaveFile(string localFile){
       resultFile.write(buffer, recvMsg.length()- MessageDictionary::endOfFile.length());
       if(resultFile.fail()){
         string errorMsg = "(" + IP_ADDRESS + ") Failed to save received file";
-        eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
+        eventQueue->push(new ReceivingResultsFailureEvent(IP_ADDRESS, errorMsg));
         return false;
       }
 
@@ -250,13 +250,13 @@ bool Connection::receiveAndSaveFile(string localFile){
     resultFile.write(buffer, bytesRead);
     if(resultFile.fail()){
       string errorMsg = "(" + IP_ADDRESS + ") Failed to save received file";
-      eventQueue->push(new ReceivingResultsFailureEvent(errorMsg));
+      eventQueue->push(new ReceivingResultsFailureEvent(IP_ADDRESS, errorMsg));
       return false;
     }
   }
 
   ++numOfResults;
-  eventQueue->push(new ActionDoneEvent(localFile));
+  eventQueue->push(new ActionDoneEvent(IP_ADDRESS, localFile));
 
   resultFile.close();
   return true;

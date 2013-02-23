@@ -27,33 +27,25 @@ vector<ConsoleEvent*> Parser::parse(string input){
   string action;
   vector<string> command_aliases;
   vector<string> addresses;
-  vector<string> passwords;
   vector<string> files;
-  vector<int> ports;
-  string alias, command, remPath, locPath;
+  string alias, command, remPath, locPath, address;
+  string password = "";
+  int port = 0;
   result = qi::parse(
       input.begin(), input.end(), 
       (
        (
         lit("connect")[phoenix::ref(action) = "connect"]
         >> " "
-        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(addresses), _1)]
+        >> qi::as_string[+(qi::char_ - " ")][phoenix::ref(address) = _1]
         >> " "
-        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(command_aliases),_1)]
-        >> " "
-        >> (qi::int_)[push_back(phoenix::ref(ports), _1)]
-        >> " "
-        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(passwords),_1)]
-        >> *(
-          ", "
-          >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(addresses), _1)]
-          >> " "
-          >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(command_aliases),_1)]
-          >> " "
-          >> (qi::int_)[push_back(phoenix::ref(ports), _1)]
-        >> " "
-        >> qi::as_string[+(qi::char_ - " ")][push_back(phoenix::ref(passwords),_1)]
+        >> qi::as_string[+(qi::char_ - " ")][phoenix::ref(alias) = _1]
+        >> *(" "
+          >> (qi::int_)[phoenix::ref(port) = _1]
           )
+        >> *(" "
+          >> qi::as_string[+(qi::char_ - " ")][phoenix::ref(password) = _1]
+        )
        )
 
        | (
@@ -101,17 +93,14 @@ vector<ConsoleEvent*> Parser::parse(string input){
 
   if(result){
     if(action == "connect"){
-      for(unsigned int i = 0; i < addresses.size();++i){
-        retVector.push_back(new CreateConnectionEvent(addresses[i], ports[i], passwords[i]));
-        aliases[command_aliases[i]]=addresses[i];
+        retVector.push_back(new CreateConnectionEvent(address, port, alias, password));
       }
-    }
     else if(action == "send"){
       for(unsigned int i = 0; i < command_aliases.size();++i)
-        retVector.push_back(new SendCommandEvent(aliases[command_aliases[i]], command));
+        retVector.push_back(new SendCommandEvent(command_aliases[i], command));
     }
     else if(action == "get"){
-      retVector.push_back(new GetFileEvent(aliases[alias], remPath, locPath));
+      retVector.push_back(new GetFileEvent(alias, remPath, locPath));
     }
     else if(action == "run"){
       ifstream inputFile;
@@ -133,7 +122,7 @@ vector<ConsoleEvent*> Parser::parse(string input){
       }
     }
     else if(action == "close"){
-      retVector.push_back(new CloseEvent(aliases[command_aliases[0]]));
+      retVector.push_back(new CloseEvent(command_aliases[0]));
     }
     else if(action == "exit"){
       exit(0);
@@ -142,13 +131,12 @@ vector<ConsoleEvent*> Parser::parse(string input){
       cout << "Available commands:" << std::endl;
       cout << "connect - extablish connection with server" << std::endl;
       cout << "  examples:" << std::endl;
-      cout << "    connect 123.123.123.123 alias 1500 password" << std::endl;
-      cout << "    connect 123.123.123.123 alias 1500 password, 134.134.134.134 alias2 1500 password" << std::endl;
+      cout << "    connect 123.123.123.123 alias [1500] [password]" << std::endl;
       cout << "send - send command to connected server" << std::endl;
       cout << "  examples:" << std::endl;
       cout << "    send alias command_to_execute" << std::endl;
       cout << "    send alias, alias command_to_execute" << std::endl;
-      cout << "run - run commands from file"<< std::endl;
+      cout << "run - run commands (written in the syntax of this program) from file"<< std::endl;
       cout << "  examples:" << std::endl;
       cout << "    run ./file/path" << std::endl;
       cout << "    run ./file/path ./file/path2" << std::endl;
@@ -158,6 +146,9 @@ vector<ConsoleEvent*> Parser::parse(string input){
       cout << "get - get file from server" << endl;
       cout << "  examples:"<<endl;
       cout << "    get alias remote/file/path local/file/path"<< std::endl;
+      cout << "close - closes connection" << endl;
+      cout << "  examples:"<<endl;
+      cout << "    close alias"<<endl;
       cout << "help - display this help prompt" << std::endl;
       cout << "exit - shutdown program" << std::endl;
     }

@@ -18,8 +18,8 @@ class ConsoleEvent : public Event {
 
 class CreateConnectionEvent : public ConsoleEvent {
   public:
-    CreateConnectionEvent(std::string address = "", int port = 0, std::string password = "")
-      : address(address), port(port), password(password) {};
+    CreateConnectionEvent(std::string address = "", int port = 0, std::string alias = "",  std::string password = "")
+      : address(address), port(port), alias(alias), password(password) {};
     virtual ~CreateConnectionEvent() {};
     virtual std::string getMessage() {
       if(port == 0)
@@ -30,61 +30,63 @@ class CreateConnectionEvent : public ConsoleEvent {
 
     std::string getAddress() {return address;};
     int getPort() {return port;};
+    std::string getAlias(){ return alias;}
     std::string getPassword() {return password;}
   private:
     std::string address;
     int port;
+    std::string alias;
     std::string password;
 };
 class CloseEvent : public ConsoleEvent{
   public:
-    CloseEvent(std::string address = "")
-      : ConsoleEvent("Close connection with " + address),
-      address(address) {};
-    std::string getAddress() {return address;}
+    CloseEvent(std::string alias = "")
+      : ConsoleEvent("Close connection with " + alias),
+      alias(alias) {};
+    std::string getAlias() {return alias;}
     std::string getMessage() {return "Closing connection";}
   private:
-    std::string address;
+    std::string alias;
 };
 
 class SendCommandEvent : public ConsoleEvent {
   public:
-    SendCommandEvent(std::string address = "", std::string command = "")
-      : ConsoleEvent("Send to " + address + " command: " + command + "."),
-        address(address), command(command) {};
+    SendCommandEvent(std::string alias = "", std::string command = "")
+      : ConsoleEvent("Send to " + alias + " command: " + command + "."),
+        alias(alias), command(command) {};
     virtual ~SendCommandEvent() {};
     virtual std::string getMessage() {return message;};
-    std::string getAddress() {return address;};
+    std::string getAlias() {return alias;};
     std::string getCommand() {return command;};
   private:
-    std::string address;
+    std::string alias;
     std::string command;
 };
 
 class GetFileEvent : public ConsoleEvent {
   public:
-    GetFileEvent(std::string address, std::string remotePath, std::string localPath)
+    GetFileEvent(std::string alias, std::string remotePath, std::string localPath)
       : ConsoleEvent("Get file " + remotePath + " to " + localPath + "."),
-       address(address), remotePath(remotePath), localPath(localPath) {};
+       alias(alias), remotePath(remotePath), localPath(localPath) {};
     virtual ~GetFileEvent() {};
     virtual std::string getMessage() {return message;};
-    std::string getAddress() {return address;};
+    std::string getAlias() {return alias;};
     std::string getRemotePath() {return remotePath;};
     std::string getLocalPath() {return localPath;};
   private:
-    std::string address;
+    std::string alias;
     std::string remotePath;
     std::string localPath;
 };
 
 class CancelAllEvent : public ConsoleEvent {
   public:
-    CancelAllEvent(std::string address = "")
-      : ConsoleEvent("Cancel all commands on " + address + "."),
-      address(address) {};
+    CancelAllEvent(std::string alias = "")
+      : ConsoleEvent("Cancel all commands on " + alias + "."),
+      alias(alias) {};
     virtual ~CancelAllEvent() {};
     virtual std::string getMessage() {return message;};
-    std::string getAddress() {return address;};
+    std::string getAlias() {return alias;};
   private:
-    std::string address;
+    std::string alias;
 };

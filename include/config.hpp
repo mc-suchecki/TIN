@@ -11,7 +11,11 @@ class Config{
     //Maciej Suchecki lubi to.
     static Config * getInstance();
 
-    // port
+    // password
+    void setPassword(std::string password){this->password = password;}
+    std::string getPassword(){return password;}
+
+    // port 
     void setPort(int port){this->port = port;}
     int getPort(){return port;}
 
@@ -35,8 +39,9 @@ class Config{
 
     static Config * instance;
 
-    int port;
     int debug;
+    int port;
+    std::string password;
     std::string logFile;
     std::string scriptFile;
 

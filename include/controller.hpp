@@ -30,6 +30,9 @@ class Controller {
     Logger *logger;
     Config *config;
 
+    //a map for storing aliases
+    std::map<std::string,std::string> aliases;
+
     //vector of active connections
     std::vector<Connection *> activeConnections;
 
@@ -48,5 +51,6 @@ class Controller {
     void cancelAll(Event *event);
 
     //methods handling particular connection events
+    void removeConnection(Event *event);
     void logMessage(Event *event);
 };
