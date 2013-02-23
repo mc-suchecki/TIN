@@ -55,6 +55,7 @@ class ConnectionHandler
         void recogizeAndExecuteCommand();
         bool isTheCommand(const string&, const string&);
         void sendFile(const string&);
+        std::ifstream::pos_type filesize(const char*);
         string getFilePathFrom(const string&);
         void executeSystemCommand(const string&);
         int readFromFileToBuffer(std::ifstream&);
