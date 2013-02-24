@@ -17,5 +17,4 @@ class MessageDictionary
 
 		static const std::string passwordCorrect;
 		static const std::string passwordIncorrect;
-		static const std::string endOfFile;
 };

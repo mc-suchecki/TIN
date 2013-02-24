@@ -169,6 +169,8 @@ void ConnectionHandler::sendFile(const string &command)
 	//TODO some security in case of wrong file name
 	string filePath = getFilePathFrom(command);
 	log("Received request: send file '" + filePath + "'");
+	uint fileSize = filesize(filePath.c_str());
+	sendFileSize(fileSize);
 	std::ifstream fileToSend;
 	fileToSend.open(filePath.c_str());
 	while (true)
@@ -179,10 +181,21 @@ void ConnectionHandler::sendFile(const string &command)
 
 		writeToOutputSocket(buffer, bytesRead);
 	}
-	string message = MessageDictionary::endOfFile;
-	writeToOutputSocket( (char*)message.c_str(), message.length() );
 	log("Sent file: '" + filePath + "'");
 	fileToSend.close();
+}
+
+void ConnectionHandler::sendFileSize(uint fileSize)
+{
+	void *bufferPointer = &fileSize;
+	write(outputSocket, bufferPointer, sizeof(fileSize));
+}
+
+std::ifstream::pos_type ConnectionHandler::filesize(const char* filename)
+{
+    std::ifstream in(filename, std::ifstream::in | std::ifstream::binary);
+    in.seekg(0, std::ifstream::end);
+    return in.tellg();
 }
 
 string ConnectionHandler::getFilePathFrom(const string &command)
