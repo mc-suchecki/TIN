@@ -223,11 +223,31 @@ void Connection::getCurrTime(char *timeBuff, int n) {
 }
 
 bool Connection::receiveAndSaveFile(string localFile){
-  // open a file of name IP_ADDRESS_DATE_TIME
   ofstream resultFile;
   resultFile.open(localFile.c_str());
 
-  while(true){
+  //receive file's size
+  int bytesRead = receiveMsg();
+  if(bytesRead <= 0){
+    string errorMsg = "(" + IP_ADDRESS + ") Failed to receive the result file's size";
+    eventQueue->push(new ReceivingResultsFailureEvent(IP_ADDRESS, errorMsg));
+    return false;
+  }
+
+  //i assumed that fileSize (4 bytes) will be sent in one package (won't be split).
+  unsigned int fileSize = *((int *) buffer),
+               remainingBytes = fileSize;
+
+  resultFile.write(buffer+sizeof(fileSize), bytesRead - sizeof(fileSize));
+  remainingBytes -= bytesRead-sizeof(fileSize);
+
+  if(resultFile.fail()){
+    string errorMsg = "(" + IP_ADDRESS + ") Failed to save received chunk of file";
+    eventQueue->push(new ReceivingResultsFailureEvent(IP_ADDRESS, errorMsg));
+    return false;
+  }
+
+  while(remainingBytes > 0){
     int bytesRead = receiveMsg();
 
     if(bytesRead <= 0){
@@ -236,18 +256,9 @@ bool Connection::receiveAndSaveFile(string localFile){
       return false;
     }
 
-    string recvMsg = string(buffer);
-    if(recvMsg.find(MessageDictionary::endOfFile) != string::npos){
-      resultFile.write(buffer, recvMsg.length()- MessageDictionary::endOfFile.length());
-      if(resultFile.fail()){
-        string errorMsg = "(" + IP_ADDRESS + ") Failed to save received file";
-        eventQueue->push(new ReceivingResultsFailureEvent(IP_ADDRESS, errorMsg));
-        return false;
-      }
-
-      break;
-    }
     resultFile.write(buffer, bytesRead);
+    remainingBytes -= bytesRead;
+
     if(resultFile.fail()){
       string errorMsg = "(" + IP_ADDRESS + ") Failed to save received file";
       eventQueue->push(new ReceivingResultsFailureEvent(IP_ADDRESS, errorMsg));
@@ -255,7 +266,6 @@ bool Connection::receiveAndSaveFile(string localFile){
     }
   }
 
-  ++numOfResults;
   eventQueue->push(new ActionDoneEvent(IP_ADDRESS, localFile));
 
   resultFile.close();
