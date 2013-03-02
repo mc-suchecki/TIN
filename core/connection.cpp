@@ -3,6 +3,7 @@
 /// Implementation of the Connection class.
 
 #include <iostream>
+#include <bitset>
 #include <fstream>
 #include <stdio.h>
 
@@ -109,7 +110,7 @@ void Connection::downloadFile_internal(string remoteFile, string localFile){
 
   memset(buffer, 0, BUFFER_SIZE);
   strncpy(buffer, fileRequest.c_str(), BUFFER_SIZE); 
-  int n = write(sockfd, buffer, strlen(buffer));
+  int n = write(sockfd, buffer, fileRequest.length()+1);
   if(n<=0){
     string errMsg = "(" + IP_ADDRESS + ") Failed to send request for a file";
     eventQueue->push(new CommandSendingFailedEvent(IP_ADDRESS, errMsg));
@@ -224,31 +225,32 @@ void Connection::getCurrTime(char *timeBuff, int n) {
 
 bool Connection::receiveAndSaveFile(string localFile){
   ofstream resultFile;
-  resultFile.open(localFile.c_str());
+  resultFile.open(localFile.c_str(), ios::binary | ios::out);
+
+  if(resultFile.fail()){
+    string errorMsg = "(" + IP_ADDRESS + ") Failed to open destination file";
+    eventQueue->push(new ReceivingResultsFailureEvent(IP_ADDRESS, errorMsg));
+    return false;
+  }
 
   //receive file's size
-  int bytesRead = receiveMsg();
-  if(bytesRead <= 0){
+  unsigned int fileSize = -1;
+  memset(buffer, 0, BUFFER_SIZE);
+  int bytesRead = read(sockfd, &fileSize, sizeof(fileSize));
+
+  if(bytesRead != sizeof(fileSize)){
     string errorMsg = "(" + IP_ADDRESS + ") Failed to receive the result file's size";
     eventQueue->push(new ReceivingResultsFailureEvent(IP_ADDRESS, errorMsg));
     return false;
   }
 
-  //i assumed that fileSize (4 bytes) will be sent in one package (won't be split).
-  unsigned int fileSize = *((int *) buffer),
-               remainingBytes = fileSize;
+  unsigned remainingBytes = fileSize;
 
-  resultFile.write(buffer+sizeof(fileSize), bytesRead - sizeof(fileSize));
-  remainingBytes -= bytesRead-sizeof(fileSize);
-
-  if(resultFile.fail()){
-    string errorMsg = "(" + IP_ADDRESS + ") Failed to save received chunk of file";
-    eventQueue->push(new ReceivingResultsFailureEvent(IP_ADDRESS, errorMsg));
-    return false;
-  }
+  cout << "Size of requested file: " << fileSize << endl;
 
   while(remainingBytes > 0){
     int bytesRead = receiveMsg();
+    cout << "Received "<< bytesRead << " bytes of a file" << endl;
 
     if(bytesRead <= 0){
       string errorMsg = "(" + IP_ADDRESS + ") Failed to receive the result file";

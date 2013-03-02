@@ -78,8 +78,6 @@ class Connection {
     struct sockaddr_in servAddr;
     char buffer[BUFFER_SIZE];
 
-    int numOfResults;
-
     void run();
     char* serialize(const std::string &command);
 
